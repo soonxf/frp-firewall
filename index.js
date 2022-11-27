@@ -60,7 +60,7 @@ logTemp.map(item => {
     site?.isp == '内网IP';
 
   //跳过条件
-  condition &&
+  condition ||
     (() => {
       const isWatch = watchProjectName.some(item => item.name == name);
       const siteTemp = `${site.country}-${site.province}-${site.city}-${site.isp}`;
