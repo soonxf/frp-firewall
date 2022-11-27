@@ -15,13 +15,12 @@ const rule = item => {
 
 const project = logSplit => {
   const ports = logSplit.filter(item => item.indexOf('port') != -1);
-  const arr = ports.map(item => {
-    return {
-      port: item.split('port')[1].replace('[', '').replace(']', '').trim(),
-      name: item.split('port')[0].split(' ')[5].replace('[', '').replace(']', '').trim(),
-    };
-  });
+  const arr = ports.map(item => ({
+    port: item.split('port')[1].replace('[', '').replace(']', '').trim(),
+    name: item.split('port')[0].split(' ')[5].replace('[', '').replace(']', '').trim(),
+  }));
 
+  //过滤重复端口
   for (var i = 0; i < arr.length; i++) {
     for (var j = i + 1; j < arr.length; j++) {
       if (arr[i].port == arr[j].port) {
