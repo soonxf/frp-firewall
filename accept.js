@@ -14,4 +14,4 @@ ips
       });
       change && exec.firewallReload();
     })()
-  : console.log('请输入需要禁止访问的 IP ,以 , 间隔');
+  : console.log('请输入需要开放访问的 IP ,以 , 间隔');
