@@ -7,12 +7,25 @@ const drop = (ip, name = '', siteTemp = '') => {
     ? exec(
         `firewall-cmd --permanent --add-rich-rule='rule family=ipv4 source address="${ip}" drop'`,
         (err, stdout, stderr) => {
-          stdout && console.log(`加入防火墙:${stdout.replace(/\n/, '')} ${name} ${ip} ${siteTemp}`);
+          stdout && console.log(`drop 防火墙:${stdout.replace(/\n/, '')} ${name} ${ip} ${siteTemp}`);
           stderr && console.log(stderr.replace(/\n/, ''));
           err && console.log('drop 错误');
         }
       )
     : console.log('drop 的 ip 错误');
+};
+
+const accept = (ip, name = '', siteTemp = '') => {
+  ip && logRule.firewalls.includes(ip)
+    ? exec(
+        `firewall-cmd --permanent --remove-rich-rule='rule family="ipv4" source address=${ip} drop'`,
+        (err, stdout, stderr) => {
+          stdout && console.log(`accept 防火墙:${stdout.replace(/\n/, '')} ${name} ${ip} ${siteTemp}`);
+          stderr && console.log(stderr.replace(/\n/, ''));
+          err && console.log('accept 错误');
+        }
+      )
+    : console.log('accept 的 ip 错误');
 };
 
 const firewallReload = () => {
@@ -26,4 +39,5 @@ const firewallReload = () => {
 };
 
 module.exports.drop = drop;
+module.exports.accept = accept;
 module.exports.firewallReload = firewallReload;
