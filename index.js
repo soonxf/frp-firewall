@@ -12,7 +12,8 @@ const type = {};
 const execDrop = (ip, name, siteTemp) => (change = true) && exec.drop(ip, name, siteTemp);
 
 logRule.logs.forEach(item => {
-  const { time, name, ip } = logRule.query(item);
+  const { time, name, ip } = item;
+
   const site = query.search(ip);
   const sitePriority = () => {
     if (logRule.config.whiteCity.some(item => site.city.indexOf(item) != -1)) return true;
