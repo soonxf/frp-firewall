@@ -41,9 +41,9 @@ logRule.logs.forEach(item => {
       const siteTemp = `${site.country}-${site.province}-${site.city}-${site.isp}`;
       const push = () => {
         type[name] == undefined && (type[name] = []);
-        let timeIp = `   ${time}   ${ip}`;
+        let timeIp = `   ${time}    ${ip}`;
         let s = '';
-        for (let i = 0; i < 15 - ip.length; i++) s += ` `;
+        for (let i = 0; i < 18 - ip.length; i++) s += ` `;
         type[name].push(`${timeIp}${s}${siteTemp}`);
       };
       const fn = () => (sitePriority() ? push() : isWatch ? execDrop(ip, name, siteTemp) : push());
