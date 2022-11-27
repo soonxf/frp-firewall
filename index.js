@@ -60,21 +60,20 @@ logTemp.map(item => {
     site?.isp == '内网IP';
 
   //跳过条件
-  condition
-    ? ''
-    : (() => {
-        const isWatch = watchProjectName.some(item => item.name == name);
-        const siteTemp = `${site.country}-${site.province}-${site.city}-${site.isp}`;
-        const push = () => {
-          if (type[name] == undefined) type[name] = [];
-          let timeIp = `   ${time}   ${ip}`;
-          let s = '';
-          for (let i = 0; i < 17 - ip.length; i++) s += ` `;
-          type[name].push(`${timeIp}${s}${siteTemp}`);
-        };
-        const fn = () => (sitePriority() ? push() : isWatch ? drop(ip, name, siteTemp) : push());
-        config.isChina ? (site.country?.indexOf('中国') == -1 ? drop(ip, name, siteTemp) : fn()) : fn();
-      })();
+  condition &&
+    (() => {
+      const isWatch = watchProjectName.some(item => item.name == name);
+      const siteTemp = `${site.country}-${site.province}-${site.city}-${site.isp}`;
+      const push = () => {
+        if (type[name] == undefined) type[name] = [];
+        let timeIp = `   ${time}   ${ip}`;
+        let s = '';
+        for (let i = 0; i < 17 - ip.length; i++) s += ` `;
+        type[name].push(`${timeIp}${s}${siteTemp}`);
+      };
+      const fn = () => (sitePriority() ? push() : isWatch ? drop(ip, name, siteTemp) : push());
+      config.isChina ? (site.country?.indexOf('中国') == -1 ? drop(ip, name, siteTemp) : fn()) : fn();
+    })();
 });
 
 Object.keys(type).map(key => {
