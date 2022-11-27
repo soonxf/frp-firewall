@@ -4,9 +4,22 @@
 
 # 要求
 
+* 开启 frps 日志和 linux 防火墙
 * linux 服务器
 * linux frps 0.45版本(只测试过这个版本),不能使用需要修改 rule.js 
 * linux 服务器安装了 node ,node 版本应该没有要求
+
+# frps 开启日志
+
+> frps.ini common 配置下
+
+```
+[common]
+
+log_file = /frps.log # 目录和 config.json 的 frpsLog 对应
+log_level = info # 需要是 info 日志,其他自行测试
+log_max_days = 3
+```
 
 # 配置
 
