@@ -43,3 +43,11 @@
 node index.js
 ```
 
+# 批量 ip 加入防火墙
+
+> 多个 ip 使用 , 间隔
+
+```
+node drop.js ip,ip
+```
+
