@@ -1,3 +1,7 @@
+# 点个 star 再走吧
+# 点个 star 再走吧
+# 点个 star 再走吧
+
 # 介绍
 
 > 结合 frps 和 linux firewall 防火墙的日志来监控连接的ip
@@ -7,7 +11,7 @@
 * 开启 frps 日志和 linux 防火墙
 * linux 服务器
 * linux frps 0.45 版本(只测试过这个版本),不能使用需要修改 rule.js 
-* linux 服务器安装了 node ,版本应该没有要求
+* linux 服务器安装了 node ,支持 es6 的版本即可
 
 # frps 开启日志
 
