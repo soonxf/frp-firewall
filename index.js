@@ -21,7 +21,7 @@ logRule.logs.forEach(item => {
     if (logRule.config.whiteCountry.some(item => site.country.indexOf(item) != -1)) return true;
     return false;
   };
-
+  // port;
   const condition =
     logRule.firewalls?.includes(ip) ||
     logRule.config.ip?.includes(ip) ||
