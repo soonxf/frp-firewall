@@ -66,7 +66,7 @@ node index.js
 
 > 多个 ip 使用 , 间隔
 
-> -f 会强制删除,(有的时候 ip 判断不准确误报)
+> ip 判断不准确误报使用 -f 会强制删除
 
 ```
 node drop.js ip,ip -f
