@@ -8,8 +8,13 @@ const query = new IP2Region({
 
 let change = false;
 const type = {};
+let dropIps = [];
 
-const execDrop = (ip, name, siteTemp) => (change = true) && exec.drop(ip, name, siteTemp);
+const execDrop = (ip, name, siteTemp) => {
+  change = true;
+  dropIps.includes(ip) || exec.drop(ip, name, siteTemp);
+  dropIps.push(ip);
+};
 
 logRule.logs.forEach(item => {
   const { time, name, ip } = item;
