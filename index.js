@@ -26,7 +26,7 @@ const logTemp = logSplit.filter(item => item.indexOf('[web:') !== -1 && item.ind
 
 const project = rule.project(logSplit);
 
-const watchprojectName = project.filter((item, index) => config.watchPort.includes(parseInt(item.port)));
+const watchProjectName = project.filter((item, index) => config.watchPort.includes(parseInt(item.port)));
 
 //解析日志
 
@@ -35,15 +35,14 @@ const firewallTemp = firewall.match(/(\d{1,3}\.){3}\d{1,3}/g);
 
 const type = {};
 
-const drop = (ip, siteTemp) => {
+const drop = (ip, name, siteTemp) => {
   exec(
     `firewall-cmd --permanent --add-rich-rule='rule family=ipv4 source address="${ip}" drop'`,
-    (err, stdout, stderr) => console.log(`加入防火墙:${stdout} ${ip} ${siteTemp}`)
+    (err, stdout, stderr) => console.log(`加入防火墙:${stdout.replace(/\n/, '')} ${name} ${ip} ${siteTemp}`)
   );
 };
 
 logTemp.map(item => {
-  // const port =
   const { time, name, ip } = rule.query(item);
   const site = query.search(ip);
   const sitePriority = () => {
@@ -64,8 +63,7 @@ logTemp.map(item => {
   condition
     ? ''
     : (() => {
-        const isWatch = watchprojectName.some(item => item.name == name);
-
+        const isWatch = watchProjectName.some(item => item.name == name);
         const siteTemp = `${site.country}-${site.province}-${site.city}-${site.isp}`;
         const push = () => {
           if (type[name] == undefined) type[name] = [];
@@ -74,8 +72,8 @@ logTemp.map(item => {
           for (let i = 0; i < 17 - ip.length; i++) s += ` `;
           type[name].push(`${timeIp}${s}${siteTemp}`);
         };
-        const fn = () => (sitePriority() ? push() : isWatch ? drop(ip, siteTemp) : push());
-        config.isChina ? (site.country?.indexOf('中国') == -1 ? drop(ip, siteTemp) : fn()) : fn();
+        const fn = () => (sitePriority() ? push() : isWatch ? drop(ip, name, siteTemp) : push());
+        config.isChina ? (site.country?.indexOf('中国') == -1 ? drop(ip, name, siteTemp) : fn()) : fn();
       })();
 });
 
