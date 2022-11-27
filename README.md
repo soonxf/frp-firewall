@@ -11,6 +11,8 @@
 * linux frps 0.45 版本(只测试过这个版本),不能使用需要修改 rule.js 
 * linux 服务器安装了 node ,支持 es6 的版本即可
 
+[linux 安装 node](https://blog.340200.xyz/2022/11/26/ruan-jian/linux-an-zhuang-node/)
+
 # frps 开启日志
 
 > frps.ini common 配置下
