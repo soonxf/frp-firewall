@@ -2,9 +2,16 @@
 
 > 结合 frps 和 linux firewall 防火墙的日志来监控连接的ip
 
+# 要求
+
+* linux 服务器
+* linux frps 0.45版本(只测试过这个版本),不能使用需要修改 rule.js 
+* linux 服务器安装了 node ,node 版本应该没有要求
+
 # 配置
 
-> 项目目录 config.json
+> 配置文件地址: 项目目录/config.json
+> 带有 _ 的是注释
 
 ```json
 {
@@ -30,6 +37,7 @@
 # 运行
 
 > 运行后即可检测日志来加入黑名单
+> 后台运行:如使用的是宝塔,添加 shell 定时任务,每间隔一段时间运行即可,或修改 index.js 添加 定时器
 
 ```node
 node index.js
