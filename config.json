@@ -13,6 +13,8 @@
     "whiteCity": [],
     "_jump": "显示的条数",
     "jump": 20,
+    "_watchTime": "间隔时间",
+    "watchTime": 10000,
     "_watchPort": "监控的项目,加入防火墙优先级次于 isChina,填入端口号",
     "watchPort": [],
     "_isChina": "优先级最高,不是中国境内 IP 直接加入黑名单",
