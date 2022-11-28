@@ -12,6 +12,6 @@ ips
           exec.accept(item);
         } else console.log('请输入正确的 ip');
       });
-      change && exec.firewallReload();
+      change && exec.firewallReload(true);
     })()
   : console.log('请输入需要开放访问的 IP ,以 , 间隔');

@@ -36,7 +36,7 @@ const getProject = logSplit => {
 const log = rf.readFileSync(config.frpsLog, 'utf-8');
 const logSplit = log.split(/\n/);
 const logSplitFilter = logSplit.filter(item => item.indexOf('[web:') !== -1 && item.indexOf('connection') !== -1);
-const logs = logSplitFilter.map(item => query(item))
+const logs = logSplitFilter.map(item => query(item));
 
 const project = getProject(logSplit);
 const watchProjectName = project.filter((item, index) => config.watchPort.includes(parseInt(item.port)));
