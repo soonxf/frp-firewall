@@ -41,12 +41,7 @@ const logs = logSplitFilter.map(item => query(item));
 const project = getProject(logSplit);
 const watchProjectName = project.filter((item, index) => config.watchPort.includes(parseInt(item.port)));
 
-const firewall = rf.readFileSync(config.firewallXml, 'utf-8');
-// 捕捉 firewallXml 文件中所有的 ip
-const firewalls = firewall.match(/(\d{1,3}\.){3}\d{1,3}/g);
-
 module.exports.query = query;
 module.exports.logs = logs;
 module.exports.watchProjectName = watchProjectName;
 module.exports.config = config;
-module.exports.firewalls = firewalls;
