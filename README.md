@@ -8,8 +8,10 @@
 
 * 开启 frps 日志和 linux 防火墙
 * linux 服务器
-* linux frps 0.45 版本(只测试过这个版本),不能使用需要修改 rule.js 
+* linux frps 0.45 版本(只测试过这个版本),不能使用需要修改 logRule.js
 * linux 服务器安装了 node ,支持 es6 的版本即可
+
+[linux 安装 node 和 安装 forever 后台运行](https://blog.340200.xyz/2022/11/26/ruan-jian/linux-an-zhuang-node/)
 
 # frps 开启日志
 
@@ -32,7 +34,6 @@ log_max_days = 3
 ```json
 {
     "frpsLog": "frp日志目录 示例:fpr/frps.log",
-    "firewallXml": "防火墙文件 示例:firewalld/zones/public.xml",
     "_ip": " Ip 白名单 优先级:国家<省份<城市<IP,只有监控的项目不在白名单才会加入防火墙",
     "ip": [],
     "_whiteCountry": "白名单 国家",
@@ -60,11 +61,19 @@ log_max_days = 3
 node index.js
 ```
 
+> or 安装 forever 后台运行 -r 表示不在控制台输出日志
+
+[linux 安装 node 和 安装 forever 后台运行](https://blog.340200.xyz/2022/11/26/ruan-jian/linux-an-zhuang-node/)
+
+```
+forever index.js -r
+```
+
 # 批量 ip 加入防火墙
 
 > 多个 ip 使用 , 间隔
 
-> -f 会强制删除,(有的时候 ip 判断不准确误报)
+> ip 判断不准确误报使用 -f 会强制删除
 
 ```
 node drop.js ip,ip -f
