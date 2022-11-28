@@ -66,7 +66,7 @@ const app = () => {
 
     exec.firewallReload();
   };
-  setInterval(() => start(), (config.watchTime = 10000));
+  setInterval(() => start(), config.watchTime?config.watchTime:10000);
   start();
 };
 app();
