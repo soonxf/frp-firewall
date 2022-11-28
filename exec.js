@@ -2,7 +2,7 @@ const { exec } = require('child_process');
 const logRule = require(__dirname + '/logRule.js');
 
 const drop = (ip, name = '', siteTemp = '') => {
-  if (logRule.firewalls.includes(ip)) return;
+  if (logRule.firewalls.includes(ip) || global?.temporaryDropIps?.includes(ip)) return;
   ip
     ? exec(
         `firewall-cmd --permanent --add-rich-rule='rule family=ipv4 source address="${ip}" drop'`,
@@ -28,15 +28,18 @@ const accept = (ip, name = '', siteTemp = '') => {
     : console.log('accept 的 ip 错误');
 };
 
-const firewallReload = () => {
+const reload = () => {
   setTimeout(function () {
     exec(`firewall-cmd --reload`, (err, stdout, stderr) => {
+      global.dropIps = [];
       stdout && console.log(`防火墙 reload 成功:${stdout.replace(/\n/, '')}`);
       stderr && console.log(stderr.replace(/\n/, ''));
       err && console.log('firewallReload 错误');
     });
-  }, 1500);
+  }, 5000);
 };
+
+const firewallReload = (flag = false) => (flag ? reload() : global.dropIps.length !== 0 && reload());
 
 module.exports.drop = drop;
 module.exports.accept = accept;
