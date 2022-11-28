@@ -14,7 +14,7 @@ const app = () => {
     exec.queryFirewallAllList(firewalls => {
       const type = {};
       const execDrop = (ip, name, siteTemp) => {
-        if (firewalls.includes(ip)) return;
+        if (firewalls.includes(ip) || global.dropIps.includes(ip)) return;
         global.dropIps.push(ip);
         exec.drop(ip, name, siteTemp, firewalls);
       };
