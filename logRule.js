@@ -32,8 +32,7 @@ const getFrpsLogs = async () => {
   try {
     // const tailLog = false;
     const tailLog = await exec.tail();
-    const readFileLog = await rf.promises.readFile(config.frpsLog, 'utf-8');
-    const log = (tailLog ? tailLog : readFileLog).split(/\n/);
+    const log = (tailLog ? tailLog : await rf.promises.readFile(config.frpsLog, 'utf-8')).split(/\n/);
     const logConnection = log.filter(item => item.indexOf('proxy.go') !== -1);
     const logs = logConnection.map(item => parseEachLog(item));
     return logs;
