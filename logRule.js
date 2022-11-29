@@ -17,8 +17,8 @@ const parseEachLog = item => {
 
 const getLogs = async () => {
   try {
-    const tailLog = false;
-    // const tailLog = await exec.tail();
+//     const tailLog = false;
+    const tailLog = await exec.tail();
     const readFileLog = await rf.promises.readFile(config.frpsLog, 'utf-8');
     const log = (tailLog ? tailLog : readFileLog).split(/\n/);
     const logConnection = log.filter(item => item.indexOf('proxy.go') !== -1);
