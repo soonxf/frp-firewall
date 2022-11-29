@@ -5,15 +5,17 @@ const searcher = require('dy-node-ip2region').create();
 const removeLog = process.argv[2] == '-r';
 
 (async () => {
-  global.dropIps = [];
   const start = async () => {
+    global.dropIps = [];
+
     console.log(`正在运行:${new Date()}`);
+
     const groupType = {};
     const frpsLogs = await logRule.getFrpsLogs();
     const firewalls = await exec.queryFirewallAllList();
 
     const execDrop = (ip, name, siteTemp) => {
-      if (global.dropIps.includes(ip)) return;
+      if (global.dropIps.includes(ip) || firewalls.includes(ip)) return;
       global.dropIps.push(ip);
       exec.drop(ip, name, siteTemp, firewalls);
     };
@@ -62,6 +64,8 @@ const removeLog = process.argv[2] == '-r';
       logRule.config.isChina ? (site.country?.indexOf('中国') == -1 ? execDrop(ip, name, siteTemp) : fn()) : fn();
     });
 
+    exec.firewallReload();
+
     if (removeLog) return;
 
     Object.keys(groupType).forEach(key => {
@@ -71,8 +75,6 @@ const removeLog = process.argv[2] == '-r';
       item.slice(-logRule.config.jump).map(item => console.log(item));
       console.log('\r');
     });
-
-    exec.firewallReload();
   };
   setInterval(() => start(), logRule.config?.watchTime ?? 300000);
 

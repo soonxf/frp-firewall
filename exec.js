@@ -87,14 +87,14 @@ const accept = (ip, name = '', siteTemp = '', firewalls) => {
 };
 
 const reload = () => {
-  setTimeout(function () {
+  setTimeout(() => {
     exec(`firewall-cmd --reload`, (err, stdout, stderr) => {
       global.dropIps = [];
       stdout && console.log(`防火墙 reload 成功:${strReplace(stdout)} ${new Date()}`);
       stderr && console.log(strReplace(stderr));
       err && console.log('firewallReload 错误');
     });
-  }, 3000);
+  }, 5000);
 };
 
 const firewallReload = (flag = false) => (flag ? reload() : global.dropIps.length !== 0 && reload());

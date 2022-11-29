@@ -32,7 +32,7 @@ const parseEachLog = item => {
 // 获取防火墙中被 frop 的 ip
 const getFirewallRule = stdout => {
   const ips = [];
-  stdout?.split('rule').forEach(item => {
+  stdout?.split(/\n{1,}/g).forEach(item => {
     const ip = ipMatch(item);
     item.indexOf('drop') != -1 && ip != null && ips.push(ip[0]);
   });
