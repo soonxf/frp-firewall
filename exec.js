@@ -3,12 +3,11 @@ const { exec, spawn } = require('child_process');
 const logRule = require(__dirname + '/logRule.js');
 
 const strReplace = str => str.replace(/\n/, '');
-const strMatch = str => str.match(/(\d{1,3}\.){3}\d{1,3}/g);
 
 const queryFirewallAllList = () => {
   return new Promise((resolve, reject) => {
     exec(`firewall-cmd --list-all`, (err, stdout, stderr) => {
-      stdout && resolve(strMatch(stdout));
+      stdout && resolve(logRule.getFirewallRule(stdout));
       stderr && console.log(strReplace(stderr));
       stderr && reject(strReplace(stderr));
       err && console.log('queryFirewallAllList 错误');

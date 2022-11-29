@@ -1,14 +1,16 @@
 const rf = require('fs');
+const { get } = require('http');
+const exec = require(__dirname + '/exec.js');
 //读取配置
 const config = JSON.parse(rf.readFileSync(__dirname + '/config.json', 'utf-8'));
 
-const query = item => {
-  // 分析 frp 日志的规则
-  const itemTemp = item.split(' ');
+const ipMatch = str => str.match(/(\d{1,3}\.){3}\d{1,3}/g);
 
-  const time = `${itemTemp[0]} ${itemTemp[1]}`;
-  const name = itemTemp[5].replace('[', '').replace(']', '');
-  const ip = itemTemp[itemTemp.length - 1].replace('[', '').replace(']', '').split(':')[0];
+const parseEachLog = item => {
+  const str = item.split(/\s{1,}/g);
+  const time = `${str[0] ?? '1970/01/01'} ${str[1] ?? '00:00:00'}`;
+  const name = `${str[5]?.replace(/\[|\]/g, '') ?? 'name:none'}`;
+  const ip = `${str[10]?.match(/(\d{1,3}\.){3}\d{1,3}/g)?.[0] ?? '1.1.1.1'}`;
   return {
     time,
     name,
@@ -16,18 +18,43 @@ const query = item => {
   };
 };
 
-const getLogs = async () => {
-  try {
-    const log = await rf.promises.readFile(config.frpsLog, 'utf-8');
+// 获取防火墙中被 frop 的 ip
+const getFirewallRule = stdout => {
+  const ips = [];
+  stdout?.split('rule').forEach(item => {
+    const ip = ipMatch(item);
+    item.indexOf('drop') != -1 && ip != null && ips.push(ip[0]);
+  });
+  return ips;
+};
 
-    const logSplit = log.split(/\n/);
-    const logSplitFilter = logSplit.filter(item => item.indexOf('[web:') !== -1 && item.indexOf('connection') !== -1);
-    const logs = logSplitFilter.map(item => query(item));
+const getFrpsLogs = async () => {
+  try {
+    // const tailLog = false;
+    const tailLog = await exec.tail();
+    const readFileLog = await rf.promises.readFile(config.frpsLog, 'utf-8');
+    const log = (tailLog ? tailLog : readFileLog).split(/\n/);
+    const logConnection = log.filter(item => item.indexOf('proxy.go') !== -1);
+    const logs = logConnection.map(item => parseEachLog(item));
     return logs;
   } catch (e) {
-    console.log('getLogs 错误');
+    console.log('getFrpsLogs 错误');
   }
 };
 
-module.exports.getLogs = getLogs;
+module.exports.getFrpsLogs = getFrpsLogs;
+module.exports.getFirewallRule = getFirewallRule;
 module.exports.config = config;
+
+// const ip = item.match(/(\d{1,3}\.){3}\d{1,3}/g)?.[0] ?? '1.1.1.1';
+
+// const name =
+//   item
+//     .match(/\[.{1,}\]/g)?.[0]
+//     ?.split(' ')[3]
+//     .replace(/\[|\]/g, '') ?? 'name:none';
+
+// const time =
+//   item.match(
+//     /((([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]{1}|[0-9]{1}[1-9][0-9]{2}|[1-9][0-9]{3})\/(((0[13578]|1[02])\/(0[1-9]|[12][0-9]|3[01]))|((0[469]|11)\/(0[1-9]|[12][0-9]|30))|(02\/(0[1-9]|[1][0-9]|2[0-8]))))|((([0-9]{2})(0[48]|[2468][048]|[13579][26])|((0[48]|[2468][048]|[3579][26])00))\/02\/29))\s{0,1}([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])/g
+//   )?.[0] ?? '1970/01/01 00:00:00';
