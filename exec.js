@@ -19,7 +19,7 @@ const queryFirewallAllList = () => {
 const tail = () => {
   return new Promise((resolve, reject) => {
     try {
-      const child = spawn('tail', ['-n',logRule.config.line, logRule.config.frpsLog]);
+      const child = spawn('tail', ['-n', logRule.config.line, logRule.config.frpsLog]);
       child.stdout.on('data', data => data && resolve(data.toString()));
       child.stderr.on('data', data => data && resolve(false));
     } catch (e) {
@@ -46,7 +46,7 @@ const drop = (ip, name = '', siteTemp = '', firewalls) => {
   };
   firewalls
     ? fn()
-    : queryFirewallAllList(execFirewalls => {
+    : queryFirewallAllList().then(execFirewalls => {
         firewalls = execFirewalls;
         fn();
       });
@@ -76,7 +76,7 @@ const accept = (ip, name = '', siteTemp = '', firewalls) => {
   };
   firewalls
     ? fn()
-    : queryFirewallAllList(execFirewalls => {
+    : queryFirewallAllList().then(execFirewalls => {
         firewalls = execFirewalls;
         fn();
       });
