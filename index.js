@@ -1,10 +1,7 @@
 const logRule = require(__dirname + '/logRule.js');
 const exec = require(__dirname + '/exec.js');
+const searcher = require('dy-node-ip2region').create();
 
-const IP2Region = require('ip2region').default;
-const query = new IP2Region({
-  disableIpv6: true,
-});
 const removeLog = process.argv[2] == '-r';
 
 (async () => {
@@ -24,7 +21,15 @@ const removeLog = process.argv[2] == '-r';
     frpsLogs.forEach(item => {
       const { time, name, ip } = item;
 
-      const site = query.search(ip);
+      const site = {};
+      const binarySearchSync = searcher.binarySearchSync(ip);
+      const cityNo = binarySearchSync?.city;
+      const region = binarySearchSync?.region.split('|') ?? [];
+      site.country = region[0] ?? '未知国家';
+      site.province = region[2] ?? '未知省份';
+      site.city = region[3] ?? '未知城市';
+      site.isp = region[4] ?? '未知网络';
+      site.cityNo = cityNo ?? '未知城市编号';
 
       const sitePriority = () => {
         return logRule.config.whiteCity.some(item => site.city.indexOf(item) != -1) ||
@@ -37,9 +42,9 @@ const removeLog = process.argv[2] == '-r';
       if (
         firewalls?.includes(ip) ||
         logRule.config.ip?.includes(ip) ||
-        site == null ||
-        site?.city == '内网IP' ||
-        site?.isp == '内网IP'
+        logRule.config.cityNo?.includes(site.cityNo) ||
+        site?.country == '保留' ||
+        site == null
       )
         return;
 
