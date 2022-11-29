@@ -10,6 +10,7 @@ const removeLog = process.argv[2] == '-r';
 (async () => {
   global.dropIps = [];
   const start = async () => {
+    console.log(`正在运行:${new Date()}`);
     const groupType = {};
     const frpsLogs = await logRule.getFrpsLogs();
     const firewalls = await exec.queryFirewallAllList();
