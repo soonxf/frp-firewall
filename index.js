@@ -7,12 +7,12 @@ const query = new IP2Region({
 });
 const removeLog = process.argv[2] == '-r';
 
-(() => {
+(async () => {
   global.dropIps = [];
   const start = async () => {
-    const firewalls = await exec.queryFirewallAllList();
+    const firewalls = [];
 
-    const type = {};
+    const groupType = {};
 
     const execDrop = (ip, name, siteTemp) => {
       if (global.dropIps.includes(ip)) return;
@@ -24,54 +24,52 @@ const removeLog = process.argv[2] == '-r';
 
     logs.forEach(item => {
       const { time, name, ip } = item;
+
       const site = query.search(ip);
+
       const sitePriority = () => {
-        if (logRule.config.whiteCity.some(item => site.city.indexOf(item) != -1)) return true;
-        if (logRule.config.whiteProvince.some(item => site.province.indexOf(item) != -1)) return true;
-        if (logRule.config.whiteCountry.some(item => site.country.indexOf(item) != -1)) return true;
-        return false;
+        return logRule.config.whiteCity.some(item => site.city.indexOf(item) != -1) ||
+          logRule.config.whiteProvince.some(item => site.province.indexOf(item) != -1) ||
+          logRule.config.whiteCountry.some(item => site.country.indexOf(item) != -1)
+          ? true
+          : false;
       };
 
-      const condition =
+      if (
         firewalls?.includes(ip) ||
         logRule.config.ip?.includes(ip) ||
         site == null ||
         site?.city == '内网IP' ||
-        site?.isp == '内网IP';
+        site?.isp == '内网IP'
+      )
+        return;
 
-      //跳过条件
-      condition ||
-        (() => {
-          const isWatch = logRule.config.watchProjectName.some(item => item.trim() == name.trim());
+      const isWatch = logRule.config.watchProjectName.some(item => item.trim() == name.trim());
 
-          const siteTemp = `${site.country}-${site.province}-${site.city}-${site.isp}`;
-          const push = () => {
-            type[name] == undefined && (type[name] = []);
-            let timeIp = `   ${time}    ${ip}`;
-            let s = '';
-            for (let i = 0; i < 18 - ip.length; i++) s += ` `;
-            type[name].push(`${timeIp}${s}${siteTemp}`);
-          };
-          const fn = () => (sitePriority() ? push() : isWatch ? execDrop(ip, name, siteTemp) : push());
-          logRule.config.isChina ? (site.country?.indexOf('中国') == -1 ? execDrop(ip, name, siteTemp) : fn()) : fn();
-        })();
+      const siteTemp = `${site.country}-${site.province}-${site.city}-${site.isp}`;
+      const push = () => {
+        groupType[name] == undefined && (groupType[name] = []);
+        let timeIp = `   ${time}    ${ip}`;
+        let s = '';
+        for (let i = 0; i < 18 - ip.length; i++) s += ` `;
+        groupType[name].push(`${timeIp}${s}${siteTemp}`);
+      };
+      const fn = () => (sitePriority() ? push() : isWatch ? execDrop(ip, name, siteTemp) : push());
+      logRule.config.isChina ? (site.country?.indexOf('中国') == -1 ? execDrop(ip, name, siteTemp) : fn()) : fn();
     });
 
-    removeLog ||
-      Object.keys(type).forEach(key => {
-        console.info(`---------------${key}---------------`);
-        console.log('\r');
-        const item = type[key];
-        item.slice(-logRule.config.jump).map(item => console.log(item));
-        console.log('\r');
-      });
+    if (removeLog) return;
+    Object.keys(groupType).forEach(key => {
+      console.info(`---------------${key}---------------`);
+      console.log('\r');
+      const item = groupType[key];
+      item.slice(-logRule.config.jump).map(item => console.log(item));
+      console.log('\r');
+    });
 
     exec.firewallReload();
   };
+  setInterval(() => start(), logRule.config?.watchTime ?? 300000);
 
-  const watchTime = logRule.config.watchTime;
-  let time = watchTime == undefined || watchTime < 10000 ? 10000 : watchTime;
-  time == 10000 && console.log('watchTime 小于 10 秒 或未设置,已经按默认启动');
-  setInterval(() => start(), time);
-  start();
+  await start();
 })();
