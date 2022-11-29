@@ -6,12 +6,19 @@
 
 # 要求
 
-* 开启 frps 日志和 linux 防火墙
-* linux 服务器
+* 开启 frps 日志和 linux firewall 防火墙
 * linux frps 0.45 版本(只测试过这个版本),不能使用需要修改 logRule.js
 * linux 服务器安装了 node ,支持 es6 的版本即可
 
 [linux 安装 node 和 安装 forever 后台运行](https://blog.340200.xyz/2022/11/26/ruan-jian/linux-an-zhuang-node/)
+
+# 文件介绍
+
+> index.js 启动文件
+
+> exec.js 执行 firewall 命令 和 查询 frps 日志
+
+> logRule.js 用来解析 frps.log 日志和 firewall 防火墙规则,发现解析出现问题可以修改这个文件
 
 # frps 开启日志
 
