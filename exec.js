@@ -19,7 +19,7 @@ const tail = () => {
   return new Promise((resolve, reject) => {
     try {
       const child = spawn('tail', ['-n', logRule.config.line, logRule.config.frpsLog]);
-      child.stdout.on('data', data => data && resolve(data.toString()));
+      child.stdout.on('data', data => data && resolve(data?.toString()));
       child.stderr.on('data', data => data && resolve(false));
     } catch (e) {
       console.log('tail 命令失败 转为 node 读取 frp 日志文件');
@@ -89,7 +89,7 @@ const reload = () => {
       stderr && console.log(strReplace(stderr));
       err && console.log('firewallReload 错误');
     });
-  }, 5000);
+  }, 3000);
 };
 
 const firewallReload = (flag = false) => (flag ? reload() : global.dropIps.length !== 0 && reload());
