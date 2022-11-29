@@ -31,9 +31,21 @@ log_max_days = 3
 
 > 带有 _ 的是注释
 
+> watchProjectName 是 frpc(frp 客户端) 配置文件(ini 格式) 每个代理的名字
+> 如下防: desktop 就是代理名
+
+```
+[desktop]
+type = tcp
+local_port = 3389
+remote_port = 3389
+```
+
 ```json
 {
     "frpsLog": "frp日志目录 示例:fpr/frps.log",
+     "_line": "每次读取 frp 日志的条数",
+    "line": 50000,
     "_ip": " Ip 白名单 优先级:国家<省份<城市<IP,只有监控的项目不在白名单才会加入防火墙",
     "ip": [],
     "_whiteCountry": "白名单 国家",
@@ -44,8 +56,8 @@ log_max_days = 3
     "whiteCity": [],
     "_jump": "显示的条数",
     "jump": 20,
-    "_watchPort": "监控的项目,加入防火墙优先级次于 isChina,填入端口号",
-    "watchPort": [],
+    "_watchProjectName": "监控的项目名,加入防火墙优先级次于 isChina ",
+    "watchProjectName":["desktop","..."],
     "_isChina": "优先级最高,不是中国境内 IP 直接加入黑名单",
     "isChina": true
 }
