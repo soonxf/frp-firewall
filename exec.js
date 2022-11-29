@@ -1,13 +1,32 @@
-const { exec } = require('child_process');
+const rf = require('fs');
+const { exec, spawn } = require('child_process');
+const logRule = require(__dirname + '/logRule.js');
 
 const strReplace = str => str.replace(/\n/, '');
 const strMatch = str => str.match(/(\d{1,3}\.){3}\d{1,3}/g);
 
-const queryFirewallAllList = callBack => {
-  exec(`firewall-cmd --list-all`, (err, stdout, stderr) => {
-    stdout && callBack(strMatch(stdout));
-    stderr && console.log(strReplace(stderr));
-    err && console.log('queryFirewallAllList 错误');
+const queryFirewallAllList = () => {
+  return new Promise((resolve, reject) => {
+    exec(`firewall-cmd --list-all`, (err, stdout, stderr) => {
+      stdout && resolve(strMatch(stdout));
+      stderr && console.log(strReplace(stderr));
+      stderr && reject(strReplace(stderr));
+      err && console.log('queryFirewallAllList 错误');
+    });
+  });
+};
+
+const tail = () => {
+  return new Promise((resolve, reject) => {
+    try {
+      const child = spawn('tail', ['-n',logRule.config.line, logRule.config.frpsLog]);
+      child.stdout.on('data', data => data && resolve(data.toString()));
+      child.stderr.on('data', data => data && resolve(false));
+    } catch (e) {
+      console.log('tail 命令失败 转为 node 读取 frp 日志文件');
+      resolve(false);
+      throw e;
+    }
   });
 };
 
@@ -35,6 +54,15 @@ const drop = (ip, name = '', siteTemp = '', firewalls) => {
 
 const accept = (ip, name = '', siteTemp = '', firewalls) => {
   const fn = () => {
+    logRule.config.ip.includes(ip)
+      ? console.log(`ip 已经存在白名单配置中 ${ip}`)
+      : (() => {
+          logRule.config.ip?.push(ip);
+          rf.writeFile(__dirname + '/config.json', JSON.stringify(logRule.config), err => {
+            err == null ? console.log(`配置白名单 Ip 成功 ${ip}`) : console.log('writeFile 写入配置失败');
+          });
+        })();
+
     ip && firewalls.includes(ip)
       ? exec(
           `firewall-cmd --permanent --remove-rich-rule='rule family="ipv4" source address=${ip} drop'`,
@@ -67,6 +95,7 @@ const reload = () => {
 
 const firewallReload = (flag = false) => (flag ? reload() : global.dropIps.length !== 0 && reload());
 
+module.exports.tail = tail;
 module.exports.drop = drop;
 module.exports.accept = accept;
 module.exports.queryFirewallAllList = queryFirewallAllList;

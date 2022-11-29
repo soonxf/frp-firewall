@@ -9,7 +9,6 @@ const query = item => {
   const time = `${itemTemp[0]} ${itemTemp[1]}`;
   const name = itemTemp[5].replace('[', '').replace(']', '');
   const ip = itemTemp[itemTemp.length - 1].replace('[', '').replace(']', '').split(':')[0];
-
   return {
     time,
     name,
@@ -17,31 +16,18 @@ const query = item => {
   };
 };
 
-const getProject = logSplit => {
-  const ports = logSplit.filter(item => item.indexOf('port') != -1);
-  const arr = ports.map(item => {
-    return {
-      port: item.split('port')[1].replace('[', '').replace(']', '').trim(),
-      name: item.split('port')[0].split(' ')[5].replace('[', '').replace(']', '').trim(),
-    };
-  });
-  for (var i = 0; i < arr.length; i++) {
-    for (var j = i + 1; j < arr.length; j++) {
-      arr[i].port == arr[j].port && arr.splice(j, 1);
-    }
+const getLogs = async () => {
+  try {
+    const log = await rf.promises.readFile(config.frpsLog, 'utf-8');
+
+    const logSplit = log.split(/\n/);
+    const logSplitFilter = logSplit.filter(item => item.indexOf('[web:') !== -1 && item.indexOf('connection') !== -1);
+    const logs = logSplitFilter.map(item => query(item));
+    return logs;
+  } catch (e) {
+    console.log('getLogs 错误');
   }
-  return arr;
 };
 
-const log = rf.readFileSync(config.frpsLog, 'utf-8');
-const logSplit = log.split(/\n/);
-const logSplitFilter = logSplit.filter(item => item.indexOf('[web:') !== -1 && item.indexOf('connection') !== -1);
-const logs = logSplitFilter.map(item => query(item));
-
-const project = getProject(logSplit);
-const watchProjectName = project.filter((item, index) => config.watchPort.includes(parseInt(item.port)));
-
-module.exports.query = query;
-module.exports.logs = logs;
-module.exports.watchProjectName = watchProjectName;
+module.exports.getLogs = getLogs;
 module.exports.config = config;
