@@ -18,9 +18,14 @@ const queryFirewallAllList = () => {
 const tail = () => {
   return new Promise((resolve, reject) => {
     try {
+      const bufferList = [];
       const child = spawn('tail', ['-n', logRule.config.line, logRule.config.frpsLog]);
-      child.stdout.on('data', data => data && resolve(data?.toString()));
+      child.stdout.on('data', data => bufferList.push(data));
       child.stderr.on('data', data => data && resolve(false));
+      child.on('close', data => {
+        const log = Buffer.concat(bufferList).toString();
+        data == 0 && resolve(log);
+      });
     } catch (e) {
       console.log('tail 命令失败 转为 node 读取 frp 日志文件');
       resolve(false);

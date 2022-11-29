@@ -58,6 +58,7 @@ const removeLog = process.argv[2] == '-r';
     });
 
     if (removeLog) return;
+
     Object.keys(groupType).forEach(key => {
       console.info(`---------------${key}---------------`);
       console.log('\r');
