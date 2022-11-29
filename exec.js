@@ -90,7 +90,7 @@ const reload = () => {
   setTimeout(function () {
     exec(`firewall-cmd --reload`, (err, stdout, stderr) => {
       global.dropIps = [];
-      stdout && console.log(`防火墙 reload 成功:${strReplace(stdout)}`);
+      stdout && console.log(`防火墙 reload 成功:${strReplace(stdout)} ${new Date()}`);
       stderr && console.log(strReplace(stderr));
       err && console.log('firewallReload 错误');
     });
