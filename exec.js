@@ -34,26 +34,33 @@ const tail = () => {
   });
 };
 
+const listen = (callBack) => {
+  const child = spawn('tail', ['-10000f', logRule.config.frpsLog]);
+  child.stdout.on('data', data => callBack(data?.toString() ?? ""));
+  child.stderr.on('data', data => data && callBack(false));
+  child.on('close', data => console.log("tail 查询关闭"));
+};
+
 const drop = (ip, name = '', siteTemp = '', firewalls) => {
   const fn = () => {
     if (firewalls?.includes(ip)) return console.log('drop 的 ip 已存在');
     ip
       ? exec(
-          `firewall-cmd --permanent --add-rich-rule='rule family=ipv4 source address="${ip}" drop'`,
-          (err, stdout, stderr) => {
-            stdout && console.log(`drop 防火墙:${strReplace(stdout)} ${name} ${ip} ${siteTemp}`);
-            stderr && console.log(strReplace(stderr));
-            err && console.log('drop 错误');
-          }
-        )
+        `firewall-cmd --permanent --add-rich-rule='rule family=ipv4 source address="${ip}" drop'`,
+        (err, stdout, stderr) => {
+          stdout && console.log(`drop 防火墙:${strReplace(stdout)} ${name} ${ip} ${siteTemp}`);
+          stderr && console.log(strReplace(stderr));
+          err && console.log('drop 错误');
+        }
+      )
       : console.log('drop 的 ip 错误');
   };
   firewalls
     ? fn()
     : queryFirewallAllList().then(execFirewalls => {
-        firewalls = execFirewalls;
-        fn();
-      });
+      firewalls = execFirewalls;
+      fn();
+    });
 };
 
 const accept = (ip, name = '', siteTemp = '', firewalls) => {
@@ -61,46 +68,47 @@ const accept = (ip, name = '', siteTemp = '', firewalls) => {
     logRule.config.ip.includes(ip)
       ? console.log(`ip 已经存在白名单配置中 ${ip}`)
       : (() => {
-          logRule.config.ip?.push(ip);
-          rf.writeFile(__dirname + '/config.json', JSON.stringify(logRule.config), err => {
-            err == null ? console.log(`配置白名单 Ip 成功 ${ip}`) : console.log('writeFile 写入配置失败');
-          });
-        })();
+        logRule.config.ip?.push(ip);
+        rf.writeFile(__dirname + '/config.json', JSON.stringify(logRule.config), err => {
+          err == null ? console.log(`配置白名单 Ip 成功 ${ip}`) : console.log('writeFile 写入配置失败');
+        });
+      })();
 
     ip && firewalls.includes(ip)
       ? exec(
-          `firewall-cmd --permanent --remove-rich-rule='rule family="ipv4" source address=${ip} drop'`,
-          (err, stdout, stderr) => {
-            stdout && console.log(`accept 防火墙:${strReplace(stdout)} ${name} ${ip} ${siteTemp}`);
-            stderr && console.log(strReplace(stderr));
-            err && console.log('accept 错误');
-          }
-        )
+        `firewall-cmd --permanent --remove-rich-rule='rule family="ipv4" source address=${ip} drop'`,
+        (err, stdout, stderr) => {
+          stdout && console.log(`accept 防火墙:${strReplace(stdout)} ${name} ${ip} ${siteTemp}`);
+          stderr && console.log(strReplace(stderr));
+          err && console.log('accept 错误');
+        }
+      )
       : console.log('accept 的 ip 错误 或者 不存在');
   };
   firewalls
     ? fn()
     : queryFirewallAllList().then(execFirewalls => {
-        firewalls = execFirewalls;
-        fn();
-      });
+      firewalls = execFirewalls;
+      fn();
+    });
 };
 
-const resetFrps = ()=>{
+const resetFrps = () => {
   return new Promise((resolve, reject) => {
     exec(`systemctl restart frps`, (err, stdout, stderr) => {
-      //frps 服务名必须是 frps 
-      resolve(`frps 已重启,请查看 日志是否生成 ${new Date().Format("yyyy-M-d h:m:s.S")}`);
-      err && console.log(`frps 重启失败${new Date().Format("yyyy-M-d h:m:s.S")}`);
+      //frps 服务名必须是 frps
+      resolve(`frps 已重启,请查看 日志是否生成 ${new Date().Format('yyyy-MM-dd hh:mm:ss.S')}`);
+      err && console.log(`frps 重启失败${new Date().Format('yyyy-MM-dd hh:mm:ss.S')}`);
     });
-  }); 
-}
+  });
+};
 
 const reload = () => {
-  setTimeout(() =>{
+  setTimeout(() => {
     exec(`firewall-cmd --reload`, (err, stdout, stderr) => {
       global.dropIps = [];
-      stdout && console.log(`防火墙 reload 成功:${strReplace(stdout)} ${new Date().Format("yyyy-M-d h:m:s.S")}`);
+      global.reloadTime = new Date().getTime()
+      stdout && console.log(`防火墙 reload 成功:${strReplace(stdout)} ${new Date().Format('yyyy-MM-dd hh:mm:ss.S')}`);
       stderr && console.log(strReplace(stderr));
       err && console.log('firewallReload 错误');
     });
@@ -111,7 +119,8 @@ const firewallReload = (flag = false) => (flag ? reload() : global.dropIps.lengt
 
 module.exports.tail = tail;
 module.exports.drop = drop;
+module.exports.listen = listen;
 module.exports.accept = accept;
-module.exports.resetFrps = resetFrps
+module.exports.resetFrps = resetFrps;
 module.exports.queryFirewallAllList = queryFirewallAllList;
 module.exports.firewallReload = firewallReload;

@@ -1,5 +1,5 @@
 const rf = require('fs');
-const { get } = require('http');
+const logRule = require(__dirname + '/logRule.js');
 const exec = require(__dirname + '/exec.js');
 //读取配置
 const config = JSON.parse(rf.readFileSync(__dirname + '/config.json', 'utf-8'));
@@ -39,17 +39,23 @@ const getFirewallRule = stdout => {
   return ips;
 };
 
-const getFrpsLogs = async () => {
+const getFrpsLogs = async (params = []) => {
   try {
-    // const tailLog = false;
-    const tailLog = await exec.tail();
-    const log = (tailLog ? tailLog : await rf.promises.readFile(config.frpsLog, 'utf-8'))?.split(/\n/) ?? [];
+    let log = []
+    const fns = [async () => {
+      // const tailLog = false;
+      const tailLog = await exec.tail();
+      log = (tailLog ? tailLog : await rf.promises.readFile(config.frpsLog, 'utf-8'))?.split(/\n/) ?? [];
+    }, async () => log = params.split(/\n/) ?? []]
+    await fns[logRule.config.mode]()
     const logConnection = log.filter(item => item.indexOf('proxy.go') !== -1);
     const logs = logConnection.map(item => parseEachLog(item));
     return logs;
   } catch (e) {
     console.log('getFrpsLogs 函数错误:请检查 frps 日志文件是否存在');
-    await exec.resetFrps()
+    if (new Date().getTime() - global.resetFrpsTime > 1000000 || global.resetFrpsTime == undefined) {
+      await exec.resetFrps()
+    }
     return [];
   }
 };
