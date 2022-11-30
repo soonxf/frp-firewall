@@ -34,13 +34,6 @@ const tail = () => {
   });
 };
 
-const listen = (callBack) => {
-  const child = spawn('tail', ['-10000f', logRule.config.frpsLog]);
-  child.stdout.on('data', data => callBack(data?.toString() ?? ""));
-  child.stderr.on('data', data => data && callBack(false));
-  child.on('close', data => console.log("tail 查询关闭"));
-};
-
 const drop = (ip, name = '', siteTemp = '', firewalls) => {
   const fn = () => {
     if (firewalls?.includes(ip)) return console.log('drop 的 ip 已存在');
@@ -96,19 +89,18 @@ const accept = (ip, name = '', siteTemp = '', firewalls) => {
 const resetFrps = () => {
   return new Promise((resolve, reject) => {
     exec(`systemctl restart frps`, (err, stdout, stderr) => {
-      //frps 服务名必须是 frps
-      resolve(`frps 已重启,请查看 日志是否生成 ${new Date().Format('yyyy-MM-dd hh:mm:ss.S')}`);
-      err && console.log(`frps 重启失败${new Date().Format('yyyy-MM-dd hh:mm:ss.S')}`);
+      //frps 服务名必须是 frps 
+      resolve(`frps 已重启,请查看 日志是否生成 ${new Date().Format("yyyy-MM-dd hh:mm:ss.S")}`);
+      err && console.log(`frps 重启失败${new Date().Format("yyyy-MM-dd hh:mm:ss.S")}`);
     });
   });
-};
+}
 
 const reload = () => {
   setTimeout(() => {
     exec(`firewall-cmd --reload`, (err, stdout, stderr) => {
       global.dropIps = [];
-      global.reloadTime = new Date().getTime()
-      stdout && console.log(`防火墙 reload 成功:${strReplace(stdout)} ${new Date().Format('yyyy-MM-dd hh:mm:ss.S')}`);
+      stdout && console.log(`防火墙 reload 成功:${strReplace(stdout)} ${new Date().Format("yyyy-MM-dd hh:mm:ss.S")}`);
       stderr && console.log(strReplace(stderr));
       err && console.log('firewallReload 错误');
     });
@@ -119,8 +111,7 @@ const firewallReload = (flag = false) => (flag ? reload() : global.dropIps.lengt
 
 module.exports.tail = tail;
 module.exports.drop = drop;
-module.exports.listen = listen;
 module.exports.accept = accept;
-module.exports.resetFrps = resetFrps;
+module.exports.resetFrps = resetFrps
 module.exports.queryFirewallAllList = queryFirewallAllList;
 module.exports.firewallReload = firewallReload;
