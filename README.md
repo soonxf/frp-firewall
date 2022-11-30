@@ -10,7 +10,7 @@
 * linux frps 0.45 版本(只测试过这个版本),不能使用需要修改 logRule.js
 * linux 服务器安装了 node ,支持 es6 的版本即可
 
-[linux 安装 node 和 安装 forever 后台运行](https://blog.340200.xyz/2022/11/26/ruan-jian/linux-an-zhuang-node/)
+[linux 安装 node 和后台运行](https://blog.340200.xyz/2022/11/26/ruan-jian/linux-an-zhuang-node/)
 
 # 文件介绍
 
@@ -83,7 +83,7 @@ node index.js
 
 > or 安装 pm2 或者 forever 后台运行 -r 表示不在控制台输出日志
 
-[linux 安装 node 和 安装 forever 后台运行](https://blog.340200.xyz/2022/11/26/ruan-jian/linux-an-zhuang-node/)
+[linux 安装 node 和后台运行](https://blog.340200.xyz/2022/11/26/ruan-jian/linux-an-zhuang-node/)
 
 ```
 forever index.js -r
@@ -103,7 +103,7 @@ node drop.js ip,ip -f
 
 > 配置查看
 
-[linux 安装 node 和 安装 forever 后台运行](https://blog.340200.xyz/2022/11/26/ruan-jian/linux-an-zhuang-node/)
+[linux 安装 node 和 安装后台运行](https://blog.340200.xyz/2022/11/26/ruan-jian/linux-an-zhuang-node/)
 
 ```
 pm2 start ecosystem.config.js
