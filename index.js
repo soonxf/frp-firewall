@@ -78,5 +78,5 @@ const removeLog = process.argv[2] == '-r';
   };
   setInterval(() => start(), logRule.config?.watchTime ?? 300000);
 
-  await start();
+   start();
 })();

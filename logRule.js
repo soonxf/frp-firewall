@@ -49,6 +49,7 @@ const getFrpsLogs = async () => {
     return logs;
   } catch (e) {
     console.log('getFrpsLogs 函数错误:请检查 frps 日志文件是否存在');
+    await exec.resetFrps()
     return [];
   }
 };
@@ -56,3 +57,4 @@ const getFrpsLogs = async () => {
 module.exports.getFrpsLogs = getFrpsLogs;
 module.exports.getFirewallRule = getFirewallRule;
 module.exports.config = config;
+

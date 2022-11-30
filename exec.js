@@ -86,8 +86,18 @@ const accept = (ip, name = '', siteTemp = '', firewalls) => {
       });
 };
 
+const resetFrps = ()=>{
+  return new Promise((resolve, reject) => {
+    exec(`systemctl restart frps`, (err, stdout, stderr) => {
+      //frps 服务名必须是 frps 
+      resolve(`frps 已重启,请查看 日志是否生成 ${new Date()}`);
+      err && console.log(`frps 重启失败${new Date()}`);
+    });
+  }); 
+}
+
 const reload = () => {
-  setTimeout(() => {
+  setTimeout(() =>{
     exec(`firewall-cmd --reload`, (err, stdout, stderr) => {
       global.dropIps = [];
       stdout && console.log(`防火墙 reload 成功:${strReplace(stdout)} ${new Date()}`);
@@ -102,5 +112,6 @@ const firewallReload = (flag = false) => (flag ? reload() : global.dropIps.lengt
 module.exports.tail = tail;
 module.exports.drop = drop;
 module.exports.accept = accept;
+module.exports.resetFrps = resetFrps
 module.exports.queryFirewallAllList = queryFirewallAllList;
 module.exports.firewallReload = firewallReload;
