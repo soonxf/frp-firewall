@@ -63,6 +63,7 @@ remote_port = 3389
     "whiteCity": [],
     "_jump": "显示的条数",
     "jump": 20,
+    "watchTime":300000,
     "_watchProjectName": "监控的项目名,加入防火墙优先级次于 isChina ",
     "watchProjectName":["desktop","..."],
     "_isChina": "优先级最高,不是中国境内 IP 直接加入黑名单",
@@ -80,7 +81,7 @@ remote_port = 3389
 node index.js
 ```
 
-> or 安装 forever 后台运行 -r 表示不在控制台输出日志
+> or 安装 pm2 或者 forever 后台运行 -r 表示不在控制台输出日志
 
 [linux 安装 node 和 安装 forever 后台运行](https://blog.340200.xyz/2022/11/26/ruan-jian/linux-an-zhuang-node/)
 
@@ -96,5 +97,15 @@ forever index.js -r
 
 ```
 node drop.js ip,ip -f
+```
+
+# pm2 后台运行
+
+> 配置查看
+
+[linux 安装 node 和 安装 forever 后台运行](https://blog.340200.xyz/2022/11/26/ruan-jian/linux-an-zhuang-node/)
+
+```
+pm2 start ecosystem.config.js
 ```
 
