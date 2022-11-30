@@ -90,8 +90,8 @@ const resetFrps = ()=>{
   return new Promise((resolve, reject) => {
     exec(`systemctl restart frps`, (err, stdout, stderr) => {
       //frps 服务名必须是 frps 
-      resolve(`frps 已重启,请查看 日志是否生成 ${new Date()}`);
-      err && console.log(`frps 重启失败${new Date()}`);
+      resolve(`frps 已重启,请查看 日志是否生成 ${new Date().Format("yyyy-M-d h:m:s.S")}`);
+      err && console.log(`frps 重启失败${new Date().Format("yyyy-M-d h:m:s.S")}`);
     });
   }); 
 }
@@ -100,7 +100,7 @@ const reload = () => {
   setTimeout(() =>{
     exec(`firewall-cmd --reload`, (err, stdout, stderr) => {
       global.dropIps = [];
-      stdout && console.log(`防火墙 reload 成功:${strReplace(stdout)} ${new Date()}`);
+      stdout && console.log(`防火墙 reload 成功:${strReplace(stdout)} ${new Date().Format("yyyy-M-d h:m:s.S")}`);
       stderr && console.log(strReplace(stderr));
       err && console.log('firewallReload 错误');
     });

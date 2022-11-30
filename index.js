@@ -4,11 +4,12 @@ const searcher = require('dy-node-ip2region').create();
 
 const removeLog = process.argv[2] == '-r';
 
+
 (async () => {
   const start = async () => {
     global.dropIps = [];
 
-    console.log(`正在运行:${new Date()}`);
+    console.log(`正在运行:${new Date().Format("yyyy-M-d h:m:s.S")}`);
 
     const groupType = {};
     const frpsLogs = await logRule.getFrpsLogs();
@@ -26,7 +27,7 @@ const removeLog = process.argv[2] == '-r';
       const site = {};
       const binarySearchSync = searcher.binarySearchSync(ip);
       const cityNo = binarySearchSync?.city;
-      const region = binarySearchSync?.region.split('|') ?? [];
+      const region = binarySearchSync?.region.split('|').filter(item => item) ?? [];
       site.country = region[0] ?? '未知国家';
       site.province = region[2] ?? '未知省份';
       site.city = region[3] ?? '未知城市';
@@ -78,5 +79,6 @@ const removeLog = process.argv[2] == '-r';
   };
   setInterval(() => start(), logRule.config?.watchTime ?? 300000);
 
-   start();
+  start();
 })();
+
