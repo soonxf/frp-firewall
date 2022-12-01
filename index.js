@@ -52,7 +52,7 @@ const removeLog = process.argv[2] == '-r';
             )
                 return;
 
-            const isWatch = logRule.config.watchProjectName.some(item => item.trim() == name.trim());
+            const isWatch = name.trim() == "login" || logRule.config.watchProjectName.some(item => item.trim() == name.trim());
 
             const siteTemp = `${site.country}-${site.province}-${site.city}-${site.isp}`;
             const push = () => {
