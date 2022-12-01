@@ -28,6 +28,7 @@ const removeLog = process.argv[2] == '-r';
             const binarySearchSync = searcher.binarySearchSync(ip);
             const cityNo = binarySearchSync?.city;
             const region = binarySearchSync?.region.split('|').filter(item => item) ?? [];
+
             site.country = region[0] ?? '未知国家';
             site.province = region[2] ?? '未知省份';
             site.city = region[3] ?? '未知城市';
@@ -35,9 +36,9 @@ const removeLog = process.argv[2] == '-r';
             site.cityNo = cityNo ?? '未知城市编号';
 
             const sitePriority = () => {
-                return logRule.config.whiteCity.some(item => site.city.indexOf(item) != -1) ||
-                    logRule.config.whiteProvince.some(item => site.province.indexOf(item) != -1) ||
-                    logRule.config.whiteCountry.some(item => site.country.indexOf(item) != -1)
+                return logRule.config.whiteCity.some(item => site.city.indexOf(item) != -1 || item.indexOf(site.city) != -1) ||
+                    logRule.config.whiteProvince.some(item => site.province.indexOf(item) != -1 || item.indexOf(site.province) != -1) ||
+                    logRule.config.whiteCountry.some(item => site.country.indexOf(item) != -1 || item.indexOf(site.country) != -1)
                     ? true
                     : false;
             };
