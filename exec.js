@@ -34,6 +34,20 @@ const tail = () => {
   });
 };
 
+const queryLoginInfo = () => {
+  return new Promise((resolve, reject) => {
+    try {
+      const child = exec(`grep  "login" ${logRule.config.line, logRule.config.frpsLog}`);
+      child.stdout.on('data', data => resolve(data));
+      child.stderr.on('data', data => data && resolve(false));
+    } catch (e) {
+      console.log('grep 查询登录信息命令失败');
+      resolve(false);
+      throw e;
+    }
+  });
+}
+
 const drop = (ip, name = '', siteTemp = '', firewalls) => {
   const fn = () => {
     if (firewalls?.includes(ip)) return console.log('drop 的 ip 已存在');
@@ -89,18 +103,19 @@ const accept = (ip, name = '', siteTemp = '', firewalls) => {
 const resetFrps = () => {
   return new Promise((resolve, reject) => {
     exec(`systemctl restart frps`, (err, stdout, stderr) => {
-      //frps 服务名必须是 frps 
-      resolve(`frps 已重启,请查看 日志是否生成 ${new Date().Format("yyyy-MM-dd hh:mm:ss.S")}`);
-      err && console.log(`frps 重启失败${new Date().Format("yyyy-MM-dd hh:mm:ss.S")}`);
+      global.resetFrpsTime = new Date().getTime()
+      //frps 服务名必须是 frps
+      resolve(`frps 已重启,请查看 日志是否生成 ${new Date().Format('yyyy-MM-dd hh:mm:ss.S')}`);
+      err && console.log(`frps 重启失败${new Date().Format('yyyy-MM-dd hh:mm:ss.S')}`);
     });
   });
-}
+};
 
 const reload = () => {
   setTimeout(() => {
     exec(`firewall-cmd --reload`, (err, stdout, stderr) => {
       global.dropIps = [];
-      stdout && console.log(`防火墙 reload 成功:${strReplace(stdout)} ${new Date().Format("yyyy-MM-dd hh:mm:ss.S")}`);
+      stdout && console.log(`防火墙 reload 成功:${strReplace(stdout)} ${new Date().Format('yyyy-MM-dd hh:mm:ss.S')}`);
       stderr && console.log(strReplace(stderr));
       err && console.log('firewallReload 错误');
     });
@@ -112,6 +127,7 @@ const firewallReload = (flag = false) => (flag ? reload() : global.dropIps.lengt
 module.exports.tail = tail;
 module.exports.drop = drop;
 module.exports.accept = accept;
-module.exports.resetFrps = resetFrps
+module.exports.resetFrps = resetFrps;
+module.exports.queryLoginInfo = queryLoginInfo;
 module.exports.queryFirewallAllList = queryFirewallAllList;
 module.exports.firewallReload = firewallReload;
