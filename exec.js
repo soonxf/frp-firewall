@@ -102,8 +102,8 @@ const accept = (ip, name = '', siteTemp = '', firewalls) => {
 
 const resetFrps = () => {
   return new Promise((resolve, reject) => {
+    global.resetFrpsTime = new Date().getTime()
     exec(`systemctl restart frps`, (err, stdout, stderr) => {
-      global.resetFrpsTime = new Date().getTime()
       //frps 服务名必须是 frps
       resolve(`frps 已重启,请查看 日志是否生成 ${new Date().Format('yyyy-MM-dd hh:mm:ss.S')}`);
       err && console.log(`frps 重启失败${new Date().Format('yyyy-MM-dd hh:mm:ss.S')}`);
