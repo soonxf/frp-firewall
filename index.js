@@ -70,9 +70,8 @@ class app {
     }
     forFrpsLogs = () => {
         const fn = (time, ip, name, site) => this.sitePriority(site) ? this.push(name, time, ip, site.fullSite) : this.isWatch(name) ? this.execDrop(ip, name, site.fullSite) : this.push(name, time, ip, site.fullSite);
-
-        for (let index = 0; index < this.frpsLogs.length; index++) {
-            const { time, name, ip } = this.frpsLogs[index];
+        this.frpsLogs.forEach(item => {
+            const { time, name, ip } = item;
             const site = this.parseSite(ip)
             if (this.isSkip(ip, site)) return
             logRule.config.isChina
@@ -80,7 +79,7 @@ class app {
                     ? this.execDrop(ip, name, site.fullSite)
                     : fn(time, ip, name, site)
                 : fn(time, ip, name, site);
-        }
+        })
     }
     initLogFirewalls = async () => {
         global.dropIps = [];
