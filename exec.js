@@ -39,6 +39,7 @@ const queryLoginInfo = () => {
     try {
       const child = exec(`grep  "login" ${logRule.config.line, logRule.config.frpsLog}`);
       child.stdout.on('data', data => resolve(data));
+      child.stdout.on('close', data => resolve(false));
       child.stderr.on('data', data => data && resolve(false));
     } catch (e) {
       console.log('grep 查询登录信息命令失败');
