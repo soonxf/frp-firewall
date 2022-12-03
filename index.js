@@ -5,7 +5,6 @@ const removeLog = process.argv[2] == '-r';
 
 class app {
     constructor() {
-        this.searcher = searcher;
         this.removeLog = removeLog;
         this.frpsLogs = [];
         this.firewalls = [];
@@ -46,7 +45,7 @@ class app {
         });
     }
     parseSite = (ip) => {
-        const search = this.searcher.binarySearchSync(ip);
+        const search = searcher.binarySearchSync(ip);
         const region = search?.region.split('|').filter(item => item) ?? [];
         const cityNo = search?.city ?? '未知城市编号';
         const country = region[0] ?? '未知国家';
@@ -70,6 +69,7 @@ class app {
     }
     forFrpsLogs = () => {
         const fn = (time, ip, name, site) => this.sitePriority(site) ? this.push(name, time, ip, site.fullSite) : this.isWatch(name) ? this.execDrop(ip, name, site.fullSite) : this.push(name, time, ip, site.fullSite);
+
         this.frpsLogs.forEach(item => {
             const { time, name, ip } = item;
             const site = this.parseSite(ip)
@@ -80,6 +80,7 @@ class app {
                     : fn(time, ip, name, site)
                 : fn(time, ip, name, site);
         })
+
     }
     initLogFirewalls = async () => {
         global.dropIps = [];
