@@ -6,7 +6,8 @@ const strReplace = str => str.replace(/\n/, '');
 
 const queryFirewallAllList = () => {
   return new Promise((resolve, reject) => {
-    exec(`firewall-cmd --list-all`, (err, stdout, stderr) => {
+    //firewall-cmd --list-all
+    exec(`firewall-cmd --list-rich-rules`, (err, stdout, stderr) => {
       stdout && resolve(logRule.getFirewallRule(stdout));
       stderr && console.log(strReplace(stderr));
       stderr && reject(strReplace(stderr));
