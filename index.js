@@ -66,8 +66,8 @@ class app {
         return name.trim() == 'login' || logRule.config.watchProjectName.some(item => item.trim() == name.trim());
     }
     isSkip = (ip, site) => {
-        return (this.firewalls?.includes(ip) ||
-            this.ip.includes(ip) ||
+        return (this.firewalls?.indexOf(ip) != -1 ||
+            this.ip.indexOf(ip) != -1 ||
             logRule.config.cityNo?.includes(site.cityNo) ||
             site?.country == '保留' ||
             site == null) ? true : false
