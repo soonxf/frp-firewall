@@ -9,20 +9,25 @@ class app {
         this.frpsLogs = [];
         this.firewalls = [];
         this.groupType = {};
-        this.run();
+        this.watchTime = 30000
+        this.ip = []
+        this.run()
+    }
+    parseIp = () => {
+        this.ip = [...logRule.config.ip, ...logRule.parseIpSegment() ?? []]
     }
     execDrop = (ip, name, fullSite) => {
         if (global.dropIps.includes(ip) || this.firewalls.includes(ip)) return;
         global.dropIps.push(ip);
         exec.drop(ip, name, fullSite, this.firewalls);
-    };
+    }
     push = (name, time, ip, site,) => {
         this.groupType[name] == undefined && (this.groupType[name] = []);
         let timeIp = `   ${time}    ${ip}`;
         let s = '';
         for (let i = 0; i < 18 - ip.length; i++) s += ` `;
         this.groupType[name].push(`${timeIp}${s}${site}`);
-    };
+    }
     sitePriority = (site) => {
         return logRule.config.whiteCity.some(item => site.city.indexOf(item) != -1 || item.indexOf(site.city) != -1) ||
             logRule.config.whiteProvince.some(
@@ -61,15 +66,14 @@ class app {
         return name.trim() == 'login' || logRule.config.watchProjectName.some(item => item.trim() == name.trim());
     }
     isSkip = (ip, site) => {
-        return (this.firewalls?.includes(ip) ||
-            logRule.config.ip?.includes(ip) ||
+        return (this.firewalls?.indexOf(ip) != -1 ||
+            this.ip.indexOf(ip) != -1 ||
             logRule.config.cityNo?.includes(site.cityNo) ||
             site?.country == '保留' ||
             site == null) ? true : false
     }
     forFrpsLogs = () => {
         const fn = (time, ip, name, site) => this.sitePriority(site) ? this.push(name, time, ip, site.fullSite) : this.isWatch(name) ? this.execDrop(ip, name, site.fullSite) : this.push(name, time, ip, site.fullSite);
-
         this.frpsLogs.forEach(item => {
             const { time, name, ip } = item;
             const site = this.parseSite(ip)
@@ -80,24 +84,36 @@ class app {
                     : fn(time, ip, name, site)
                 : fn(time, ip, name, site);
         })
-
+    }
+    setWatchTime = () => {
+        let watchTime = logRule.config?.watchTime
+        watchTime == undefined || logRule.config?.watchTime < 30000 && (watchTime = 30000)
+        this.watchTime = watchTime
     }
     initLogFirewalls = async () => {
         global.dropIps = [];
         this.groupType = {};
+        await exec.timer()
         this.frpsLogs = await logRule.getFrpsLogs();
+        await exec.timer()
         this.firewalls = await exec.queryFirewallAllList();
+        return true
     }
-    run = () => {
+    run = async () => {
+        this.setWatchTime()
+        this.parseIp()
+        await exec.timer()
         const start = async () => {
-            console.log(`正在运行:${new Date().Format('yyyy-MM-dd hh:mm:ss.S')}`);
-            await this.initLogFirewalls()
-            this.forFrpsLogs()
+            console.log(`正在运行: ${new Date().Format('yyyy-MM-dd hh:mm:ss.S')} `);
+            await this.initLogFirewalls();
+            await exec.timer();
+            this.forFrpsLogs();
             exec.firewallReload();
             this.print();
         };
         start()
-        setInterval(() => start(), logRule.config?.watchTime ?? 300000);
+        setInterval(() => start(), this.watchTime);
     }
 }
+
 new app()

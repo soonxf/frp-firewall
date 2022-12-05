@@ -6,7 +6,8 @@ const strReplace = str => str.replace(/\n/, '');
 
 const queryFirewallAllList = () => {
   return new Promise((resolve, reject) => {
-    exec(`firewall-cmd --list-all`, (err, stdout, stderr) => {
+    //firewall-cmd --list-all
+    exec(`firewall-cmd --list-rich-rules`, (err, stdout, stderr) => {
       stdout && resolve(logRule.getFirewallRule(stdout));
       stderr && console.log(strReplace(stderr));
       stderr && reject(strReplace(stderr));
@@ -65,10 +66,10 @@ const drop = (ip, name = '', siteTemp = '', firewalls) => {
   };
   firewalls
     ? fn()
-    : queryFirewallAllList().then(execFirewalls => {
-      firewalls = execFirewalls;
+    : (() => {
+      firewalls = queryFirewallAllList()
       fn();
-    });
+    })()
 };
 
 const accept = (ip, name = '', siteTemp = '', firewalls) => {
@@ -81,7 +82,6 @@ const accept = (ip, name = '', siteTemp = '', firewalls) => {
           err == null ? console.log(`配置白名单 Ip 成功 ${ip}`) : console.log('writeFile 写入配置失败');
         });
       })();
-
     ip && firewalls.includes(ip)
       ? exec(
         `firewall-cmd --permanent --remove-rich-rule='rule family="ipv4" source address=${ip} drop'`,
@@ -95,10 +95,10 @@ const accept = (ip, name = '', siteTemp = '', firewalls) => {
   };
   firewalls
     ? fn()
-    : queryFirewallAllList().then(execFirewalls => {
-      firewalls = execFirewalls;
+    : (() => {
+      firewalls = queryFirewallAllList()
       fn();
-    });
+    })()
 };
 
 const resetFrps = () => {
@@ -123,10 +123,18 @@ const reload = () => {
   }, 5000);
 };
 
+const timer = () => new Promise((resolve, reject) => {
+  const t = setTimeout(() => {
+    resolve(t);
+    t && clearTimeout(t)
+  }, 3000)
+})
+
 const firewallReload = (flag = false) => (flag ? reload() : global.dropIps.length !== 0 && reload());
 
 module.exports.tail = tail;
 module.exports.drop = drop;
+module.exports.timer = timer;
 module.exports.accept = accept;
 module.exports.resetFrps = resetFrps;
 module.exports.queryLoginInfo = queryLoginInfo;
