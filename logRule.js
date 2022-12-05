@@ -38,7 +38,7 @@ const parseLoginLog = async () => {
   }
 };
 
-// 获取防火墙中被 frop 的 ip
+// 获取防火墙中被 drop 的 ip
 const getFirewallRule = stdout => {
   const ips = [];
   stdout?.split(/\n{1,}/g).forEach(item => {
@@ -66,6 +66,21 @@ const getFrpsLogs = async () => {
   }
 };
 
+const parseIpSegment = () => {
+  const ip = []
+  const ipFilter = config.ip.filter((item, index) => item.indexOf("/") != -1)
+  const ipSplit = ipFilter.map(item => item.split("."))
+  ipSplit.forEach(item => {
+    const len = item[item.length - 1].split("/")
+    const start = len[0]
+    const end = len[1]
+    for (let index = start; index <= end; index++) {
+      ip.push(`${item[0]}.${item[1]}.${item[2]}.${index}`)
+    }
+  })
+  return ip
+}
+
 //对Date的扩展，将 Date 转化为指定格式的String
 //月(M)、日(d)、小时(h)、分(m)、秒(s)、季度(q) 可以用 1-2 个占位符，
 //年(y)可以用 1-4 个占位符，毫秒(S)只能用 1 个占位符(是 1-3 位的数字)
@@ -91,4 +106,5 @@ Date.prototype.Format = function (fmt) {
 
 module.exports.getFrpsLogs = getFrpsLogs;
 module.exports.getFirewallRule = getFirewallRule;
+module.exports.parseIpSegment = parseIpSegment;
 module.exports.config = config;
