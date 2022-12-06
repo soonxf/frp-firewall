@@ -38,7 +38,7 @@ const tail = () => {
 const queryLoginInfo = () => {
   return new Promise((resolve, reject) => {
     try {
-      const child = exec(`grep  "login" ${logRule.config.line, logRule.config.frpsLog}`);
+      const child = exec(`grep  "login" ${(logRule.config.line, logRule.config.frpsLog)}`);
       child.stdout.on('data', data => resolve(data));
       child.stdout.on('close', data => resolve(false));
       child.stderr.on('data', data => data && resolve(false));
@@ -48,31 +48,29 @@ const queryLoginInfo = () => {
       throw e;
     }
   });
-}
-
-const drop = (ip, name = '', siteTemp = '', firewalls) => {
-  const fn = () => {
-    if (firewalls?.includes(ip)) return console.log('drop 的 ip 已存在');
-    ip
-      ? exec(
-        `firewall-cmd --permanent --add-rich-rule='rule family=ipv4 source address="${ip}" drop'`,
-        (err, stdout, stderr) => {
-          stdout && console.log(`drop 防火墙:${strReplace(stdout)} ${name} ${ip} ${siteTemp}`);
-          stderr && console.log(strReplace(stderr));
-          err && console.log('drop 错误');
-        }
-      )
-      : console.log('drop 的 ip 错误');
-  };
-  firewalls
-    ? fn()
-    : (() => {
-      firewalls = queryFirewallAllList()
-      fn();
-    })()
 };
 
-const accept = (ip, name = '', siteTemp = '', firewalls) => {
+const drop = async (ip, name = '', siteTemp = '', firewalls) => {
+  const fn = () => {
+    if (firewalls?.includes(ip)) return console.log('drop 的 ip 已存在');
+    const command =
+      logRule.config.dropTime == 0
+        ? `firewall-cmd --permanent --add-rich-rule='rule family=ipv4 source address="${ip}" drop'`
+        : `firewall-cmd --add-rich-rule='rule family=ipv4 source address="${ip}"  drop' --timeout=${logRule.config.dropTime ?? 86400
+        }`;
+    ip
+      ? exec(command, (err, stdout, stderr) => {
+        stdout && console.log(`drop 防火墙:${strReplace(stdout)} ${name} ${ip} ${siteTemp} ${logRule.config.dropTime}`);
+        stderr && console.log(strReplace(stderr));
+        err && console.log('drop 错误');
+      })
+      : console.log('drop 的 ip 错误');
+  };
+  firewalls == undefined && (firewalls = await queryFirewallAllList());
+  fn();
+};
+
+const accept = async (ip, name = '', siteTemp = '', firewalls) => {
   const fn = () => {
     logRule.config.ip.includes(ip)
       ? console.log(`ip 已经存在白名单配置中 ${ip}`)
@@ -93,17 +91,13 @@ const accept = (ip, name = '', siteTemp = '', firewalls) => {
       )
       : console.log('accept 的 ip 错误 或者 不存在');
   };
-  firewalls
-    ? fn()
-    : (() => {
-      firewalls = queryFirewallAllList()
-      fn();
-    })()
+  firewalls == undefined && (firewalls = await queryFirewallAllList());
+  fn();
 };
 
 const resetFrps = () => {
   return new Promise((resolve, reject) => {
-    global.resetFrpsTime = new Date().getTime()
+    global.resetFrpsTime = new Date().getTime();
     exec(`systemctl restart frps`, (err, stdout, stderr) => {
       //frps 服务名必须是 frps
       resolve(`frps 已重启,请查看 日志是否生成 ${new Date().Format('yyyy-MM-dd hh:mm:ss.S')}`);
@@ -113,6 +107,7 @@ const resetFrps = () => {
 };
 
 const reload = () => {
+  const time = global.dropIps?.length ?? 10 * 100
   setTimeout(() => {
     exec(`firewall-cmd --reload`, (err, stdout, stderr) => {
       global.dropIps = [];
@@ -120,15 +115,16 @@ const reload = () => {
       stderr && console.log(strReplace(stderr));
       err && console.log('firewallReload 错误');
     });
-  }, 5000);
+  }, time + 3000);
 };
 
-const timer = () => new Promise((resolve, reject) => {
-  const t = setTimeout(() => {
-    resolve(t);
-    t && clearTimeout(t)
-  }, 1000)
-})
+const timer = () =>
+  new Promise((resolve, reject) => {
+    const t = setTimeout(() => {
+      resolve(t);
+      t && clearTimeout(t);
+    }, 1000);
+  });
 
 const firewallReload = (flag = false) => (flag ? reload() : global.dropIps.length !== 0 && reload());
 

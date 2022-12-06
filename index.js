@@ -20,7 +20,10 @@ class app {
     execDrop = (ip, name, fullSite) => {
         if (global.dropIps.includes(ip) || this.firewalls.includes(ip)) return;
         global.dropIps.push(ip);
-        exec.drop(ip, name, fullSite, this.firewalls);
+        const t = setTimeout(() => {
+            exec.drop(ip, name, fullSite, this.firewalls);
+            clearTimeout(t)
+        }, global.dropIps.length * 100)
     }
     push = (name, time, ip, site,) => {
         this.groupType[name] == undefined && (this.groupType[name] = []);
@@ -100,6 +103,9 @@ class app {
         this.firewalls = await exec.queryFirewallAllList();
         return true
     }
+    isFirewallReload = () => {
+        logRule.config.dropTime == 0 && exec.firewallReload();
+    }
     run = async () => {
         this.setWatchTime()
         await this.parseIp()
@@ -109,7 +115,7 @@ class app {
             await this.initLogFirewalls();
             await exec.timer();
             this.forFrpsLogs();
-            exec.firewallReload();
+            this.isFirewallReload()
             this.print();
         };
         start()
