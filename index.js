@@ -1,3 +1,4 @@
+require('v8-compile-cache')
 const logRule = require(__dirname + '/logRule.js');
 const exec = require(__dirname + '/exec.js');
 const searcher = require('dy-node-ip2region').create();
@@ -9,12 +10,12 @@ class app {
         this.frpsLogs = [];
         this.firewalls = [];
         this.groupType = {};
-        this.watchTime = 30000
+        this.watchTime = 15000
         this.ip = []
         this.run()
     }
-    parseIp = () => {
-        this.ip = [...logRule.config.ip, ...logRule.parseIpSegment() ?? []]
+    parseIp = async () => {
+        this.ip = [...logRule.config.ip, ...await logRule.parseIpSegment() ?? []]
     }
     execDrop = (ip, name, fullSite) => {
         if (global.dropIps.includes(ip) || this.firewalls.includes(ip)) return;
@@ -87,7 +88,7 @@ class app {
     }
     setWatchTime = () => {
         let watchTime = logRule.config?.watchTime
-        watchTime == undefined || logRule.config?.watchTime < 30000 && (watchTime = 30000)
+        watchTime == undefined || logRule.config?.watchTime < 15000 && (watchTime = 15000)
         this.watchTime = watchTime
     }
     initLogFirewalls = async () => {
@@ -101,7 +102,7 @@ class app {
     }
     run = async () => {
         this.setWatchTime()
-        this.parseIp()
+        await this.parseIp()
         await exec.timer()
         const start = async () => {
             console.log(`正在运行: ${new Date().Format('yyyy-MM-dd hh:mm:ss.S')} `);

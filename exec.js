@@ -127,7 +127,7 @@ const timer = () => new Promise((resolve, reject) => {
   const t = setTimeout(() => {
     resolve(t);
     t && clearTimeout(t)
-  }, 3000)
+  }, 1000)
 })
 
 const firewallReload = (flag = false) => (flag ? reload() : global.dropIps.length !== 0 && reload());

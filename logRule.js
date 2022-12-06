@@ -19,6 +19,7 @@ const parseEachLog = item => {
 
 const parseLoginLog = async () => {
   try {
+    await exec.timer()
     const loginInfo = await exec.queryLoginInfo();
     return loginInfo
       ?.split(/\n/)
@@ -51,6 +52,7 @@ const getFirewallRule = stdout => {
 const getFrpsLogs = async () => {
   try {
     // const tailLog = false;
+    await exec.timer()
     const tailLog = await exec.tail();
     const log = (tailLog ? tailLog : await rf.promises.readFile(config.frpsLog, 'utf-8'))?.split(/\n/) ?? [];
     const loginLog = await parseLoginLog();
@@ -66,9 +68,10 @@ const getFrpsLogs = async () => {
   }
 };
 
-const parseIpSegment = () => {
+const parseIpSegment = async () => {
+  await exec.timer()
   const ip = []
-  const ipFilter = config.ip.filter((item, index) => item.indexOf("/") != -1)
+  const ipFilter = config.ip.filter(item => item.indexOf("/") != -1)
   const ipSplit = ipFilter.map(item => item.split("."))
   ipSplit.forEach(item => {
     const len = item[item.length - 1].split("/")
