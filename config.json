@@ -12,6 +12,8 @@
     "whiteProvince": [
         "安徽"
     ],
+    "_dropTime": "禁用 ip 的时间, 0 表示永久,默认三天",
+    "dropTime": 259200,
     "_whiteCity": "白名单城市",
     "whiteCity": [],
     "_jump": "显示的条数",
