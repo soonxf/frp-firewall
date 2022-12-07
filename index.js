@@ -114,11 +114,11 @@ class app {
     }
     run = async () => {
         this.setWatchTime()
-        await this.getReadFile()
         await this.parseIp()
         await exec.timer()
         const start = async () => {
             console.log(`正在运行: ${new Date().Format('yyyy-MM-dd hh:mm:ss.S')} `);
+            await this.getReadFile()
             await this.initLogFirewalls();
             await exec.timer();
             this.forFrpsLogs();
