@@ -35,6 +35,25 @@ const tail = () => {
   });
 };
 
+
+const isReadFile = () => {
+  return new Promise((resolve, reject) => {
+    try {
+      const child = exec(`cat /proc/uptime`);
+      child.stdout.on('data', data => {
+        const time = data?.split(/\s{1,}/g)[0] * 1000
+        const flag = time - logRule.config.watchTime > 0 ? true : false;
+        resolve(flag)
+      });
+      // child.stdout.on('close', data => resolve(true));
+      child.stderr.on('data', data => data && resolve(true));
+    } catch (e) {
+      console.log('查询开机时间失败');
+      resolve(true);
+    }
+  });
+}
+
 const queryLoginInfo = () => {
   return new Promise((resolve, reject) => {
     try {
@@ -45,7 +64,6 @@ const queryLoginInfo = () => {
     } catch (e) {
       console.log('grep 查询登录信息命令失败');
       resolve(false);
-      throw e;
     }
   });
 };
@@ -60,7 +78,8 @@ const drop = async (ip, name = '', siteTemp = '', firewalls) => {
         }`;
     ip
       ? exec(command, (err, stdout, stderr) => {
-        stdout && console.log(`drop 防火墙:${strReplace(stdout)} ${name} ${ip} ${siteTemp} ${logRule.config.dropTime}`);
+        stdout &&
+          console.log(`drop 防火墙:${strReplace(stdout)} ${name} ${ip} ${siteTemp} ${logRule.config.dropTime}`);
         stderr && console.log(strReplace(stderr));
         err && console.log('drop 错误');
       })
@@ -107,7 +126,7 @@ const resetFrps = () => {
 };
 
 const reload = () => {
-  const time = global.dropIps?.length ?? 10 * 100
+  const time = global.dropIps?.length ?? 10 * 100;
   setTimeout(() => {
     exec(`firewall-cmd --reload`, (err, stdout, stderr) => {
       global.dropIps = [];
@@ -132,6 +151,7 @@ module.exports.tail = tail;
 module.exports.drop = drop;
 module.exports.timer = timer;
 module.exports.accept = accept;
+module.exports.isReadFile = isReadFile;
 module.exports.resetFrps = resetFrps;
 module.exports.queryLoginInfo = queryLoginInfo;
 module.exports.queryFirewallAllList = queryFirewallAllList;

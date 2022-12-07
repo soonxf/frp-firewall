@@ -11,6 +11,7 @@ class app {
         this.firewalls = [];
         this.groupType = {};
         this.watchTime = 15000
+        this.isReadFile = false
         this.ip = []
         this.run()
     }
@@ -98,16 +99,22 @@ class app {
         global.dropIps = [];
         this.groupType = {};
         await exec.timer()
-        this.frpsLogs = await logRule.getFrpsLogs();
+        this.frpsLogs = await logRule.getFrpsLogs(this.isReadFile);
         await exec.timer()
         this.firewalls = await exec.queryFirewallAllList();
         return true
+    }
+    getReadFile = async () => {
+        const isReadFile = await exec.isReadFile()
+        this.isReadFile = isReadFile
+        isReadFile || console.log("开机时间小于监听时间,采用读取文件模式")
     }
     isFirewallReload = () => {
         logRule.config.dropTime == 0 && exec.firewallReload();
     }
     run = async () => {
         this.setWatchTime()
+        await this.getReadFile()
         await this.parseIp()
         await exec.timer()
         const start = async () => {

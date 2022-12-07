@@ -49,12 +49,12 @@ const getFirewallRule = stdout => {
   return ips;
 };
 
-const getFrpsLogs = async () => {
+const getFrpsLogs = async (isReadFile) => {
   try {
     // const tailLog = false;
     await exec.timer()
     const tailLog = await exec.tail();
-    const log = (tailLog ? tailLog : await rf.promises.readFile(config.frpsLog, 'utf-8'))?.split(/\n/) ?? [];
+    const log = (tailLog && isReadFile ? tailLog : await rf.promises.readFile(config.frpsLog, 'utf-8'))?.split(/\n/) ?? [];
     const loginLog = await parseLoginLog();
     const logConnection = log.filter(item => item.indexOf('proxy.go') !== -1);
     const logs = logConnection.map(item => parseEachLog(item));
@@ -69,7 +69,7 @@ const getFrpsLogs = async () => {
 };
 
 const parseIpSegment = async () => {
-  await exec.timer()
+  await exec.timer();
   const ip = []
   const ipFilter = config.ip.filter(item => item.indexOf("/") != -1)
   const ipSplit = ipFilter.map(item => item.split("."))
