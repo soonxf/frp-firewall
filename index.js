@@ -19,7 +19,7 @@ class app {
         this.ip = [...logRule.config.ip, ...await logRule.parseIpSegment() ?? []]
     }
     execDrop = (ip, name, fullSite) => {
-        if (global.dropIps.includes(ip) || this.firewalls.includes(ip)) return;
+        if (global.dropIps.includes(ip)) return;
         global.dropIps.push(ip);
         const t = setTimeout(() => {
             exec.drop(ip, name, fullSite, this.firewalls);
