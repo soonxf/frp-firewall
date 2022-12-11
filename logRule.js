@@ -68,21 +68,18 @@ const getFrpsLogs = async (isReadFile) => {
   }
 };
 
-const parseIpSegment = async () => {
-  await exec.timer();
-  const ip = []
-  const ipFilter = config.ip.filter(item => item.indexOf("/") != -1)
-  const ipSplit = ipFilter.map(item => item.split("."))
-  ipSplit.forEach(item => {
-    const len = item[item.length - 1].split("/")
-    const start = len[0]
-    const end = len[1]
-    for (let index = start; index <= end; index++) {
-      ip.push(`${item[0]}.${item[1]}.${item[2]}.${index}`)
-    }
+const IpInSegment = (ip) => {
+  const iParse = ip.split(".").map(item => parseInt(item))
+  const ipIn = config.ip.some(item => {
+    return /(\d{1,3}\.){3}\d{1,3}(\-|\/{1,4})/g.test(item) && item.split(".").every((item, index) => {
+      const ipSegment = item.split(/\-|\//).map(item => parseInt(item))
+      const ipIn = ipSegment.length == 1 ? ipSegment[0] == iParse[index] : (ipSegment[0] <= iParse[index] && iParse[index] <= ipSegment[1])
+      return ipIn
+    })
   })
-  return ip
+  return ipIn
 }
+
 
 //对Date的扩展，将 Date 转化为指定格式的String
 //月(M)、日(d)、小时(h)、分(m)、秒(s)、季度(q) 可以用 1-2 个占位符，
@@ -109,5 +106,5 @@ Date.prototype.Format = function (fmt) {
 
 module.exports.getFrpsLogs = getFrpsLogs;
 module.exports.getFirewallRule = getFirewallRule;
-module.exports.parseIpSegment = parseIpSegment;
+module.exports.IpInSegment = IpInSegment;
 module.exports.config = config;

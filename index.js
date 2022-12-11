@@ -12,11 +12,8 @@ class app {
         this.groupType = {};
         this.watchTime = 15000
         this.isReadFile = false
-        this.ip = []
+        this.ip = logRule.config.ip ?? []
         this.run()
-    }
-    parseIp = async () => {
-        this.ip = [...logRule.config.ip, ...await logRule.parseIpSegment() ?? []]
     }
     execDrop = (ip, name, fullSite) => {
         if (global.dropIps.includes(ip)) return;
@@ -73,6 +70,7 @@ class app {
     isSkip = (ip, site) => {
         return (this.firewalls?.indexOf(ip) != -1 ||
             this.ip.indexOf(ip) != -1 ||
+            logRule.IpInSegment(ip) ||
             logRule.config.cityNo?.includes(site.cityNo) ||
             site?.country == '保留' ||
             site == null) ? true : false
@@ -114,7 +112,6 @@ class app {
     }
     run = async () => {
         this.setWatchTime()
-        await this.parseIp()
         await exec.timer()
         const start = async () => {
             console.log(`正在运行: ${new Date().Format('yyyy-MM-dd hh:mm:ss.S')} `);
