@@ -1,130 +1,158 @@
-require('v8-compile-cache')
+const rf = require('fs');
+const { exec, spawn } = require('child_process');
 const logRule = require(__dirname + '/logRule.js');
-const exec = require(__dirname + '/exec.js');
-const searcher = require('dy-node-ip2region').create();
-const removeLog = process.argv[2] == '-r';
 
-class app {
-  constructor() {
-    this.removeLog = removeLog;
-    this.frpsLogs = [];
-    this.firewalls = [];
-    this.groupType = {};
-    this.watchTime = 15000
-    this.isReadFile = false
-    this.ip = logRule.config.ip ?? []
-    this.run()
-  }
-  execDrop = (ip, name, fullSite) => {
-    if (global.dropIps.includes(ip)) return;
-    global.dropIps.push(ip);
-    const t = setTimeout(() => {
-      exec.drop(ip, name, fullSite, this.firewalls);
-      clearTimeout(t)
-    }, global.dropIps.length * 100)
-  }
-  push = (name, time, ip, site,) => {
-    this.groupType[name] == undefined && (this.groupType[name] = []);
-    let timeIp = `   ${time}    ${ip}`;
-    let s = '';
-    for (let i = 0; i < 18 - ip.length; i++) s += ` `;
-    this.groupType[name].push(`${timeIp}${s}${site}`);
-  }
-  sitePriority = (site) => {
-    return logRule.config.whiteCity.some(item => site.city.indexOf(item) != -1 || item.indexOf(site.city) != -1) ||
-      logRule.config.whiteProvince.some(
-        item => site.province.indexOf(item) != -1 || item.indexOf(site.province) != -1
-      ) ||
-      logRule.config.whiteCountry.some(
-        item => site.country.indexOf(item) != -1 || item.indexOf(site.country) != -1
-      )
-      ? true
-      : false;
-  }
-  print = () => {
-    if (this.removeLog) return;
-    Object.keys(this.groupType).forEach(key => {
-      console.info(`---------------${key}---------------`);
-      console.log('\r');
-      const item = this.groupType[key];
-      item.slice(-logRule.config.jump).map(item => console.log(item));
-      console.log('\r');
+const strReplace = str => str.replace(/\n/, '');
+
+const queryFirewallAllList = () => {
+  return new Promise((resolve, reject) => {
+    //firewall-cmd --list-all
+    exec(`firewall-cmd --list-rich-rules`, (err, stdout, stderr) => {
+      stdout && resolve(logRule.getFirewallRule(stdout));
+      stderr && console.log(strReplace(stderr));
+      stderr && reject(strReplace(stderr));
+      err && console.log('queryFirewallAllList 错误');
     });
-  }
-  parseSite = (ip) => {
-    const search = searcher.binarySearchSync(ip);
-    const region = search?.region.split('|').filter(item => item) ?? [];
-    const cityNo = search?.city ?? '未知城市编号';
-    const country = region[0] ?? '未知国家';
-    const province = region[2] ?? '未知省份';
-    const city = region[3] ?? '未知城市';
-    const isp = region[4] ?? '未知网络';
-    const fullSite = `${country}-${province}-${city}-${isp}`
-    return {
-      country, province, city, cityNo, isp, fullSite
+  });
+};
+
+const tail = () => {
+  return new Promise((resolve, reject) => {
+    try {
+      const bufferList = [];
+      const child = spawn('tail', ['-n', logRule.config.line, logRule.config.frpsLog]);
+      child.stdout.on('data', data => bufferList.push(data));
+      child.stderr.on('data', data => data && resolve(false));
+      child.on('close', data => {
+        const log = Buffer.concat(bufferList).toString();
+        data == 0 && resolve(log);
+      });
+    } catch (e) {
+      console.log('tail 命令失败 转为 node 读取 frp 日志文件');
+      resolve(false);
+      throw e;
     }
-  }
-  isWatch = (name) => {
-    return name.trim() == 'login' || logRule.config.watchProjectName.some(item => item.trim() == name.trim());
-  }
-  isSkip = (ip, site) => {
-    return (this.firewalls?.indexOf(ip) != -1 ||
-      this.ip.indexOf(ip) != -1 ||
-      logRule.ipInSegment(ip) ||
-      logRule.config.cityNo?.includes(site.cityNo) ||
-      site?.country == '保留' ||
-      site == null) ? true : false
-  }
-  forFrpsLogs = () => {
-    const fn = (time, ip, name, site) => this.sitePriority(site) ? this.push(name, time, ip, site.fullSite) : this.isWatch(name) ? this.execDrop(ip, name, site.fullSite) : this.push(name, time, ip, site.fullSite);
-    this.frpsLogs.forEach(item => {
-      const { time, name, ip } = item;
-      const site = this.parseSite(ip)
-      if (this.isSkip(ip, site)) return
-      logRule.config.isChina
-        ? site.country?.indexOf('中国') == -1
-          ? this.execDrop(ip, name, site.fullSite)
-          : fn(time, ip, name, site)
-        : fn(time, ip, name, site);
-    })
-  }
-  setWatchTime = () => {
-    let watchTime = logRule.config?.watchTime
-    watchTime == undefined || logRule.config?.watchTime < 15000 && (watchTime = 15000)
-    this.watchTime = watchTime
-  }
-  initLogFirewalls = async () => {
-    global.dropIps = [];
-    this.groupType = {};
-    await exec.timer()
-    this.frpsLogs = await logRule.getFrpsLogs(this.isReadFile);
-    await exec.timer()
-    this.firewalls = await exec.queryFirewallAllList();
-    return true
-  }
-  getReadFile = async () => {
-    const isReadFile = await exec.isReadFile()
-    this.isReadFile = isReadFile
-    isReadFile || console.log("开机时间小于监听时间,采用读取文件模式")
-  }
-  isFirewallReload = () => {
-    logRule.config.dropTime == 0 && exec.firewallReload();
-  }
-  run = async () => {
-    this.setWatchTime()
-    await exec.timer()
-    const start = async () => {
-      console.log(`正在运行: ${new Date().Format('yyyy-MM-dd hh:mm:ss.S')} `);
-      await this.getReadFile()
-      await this.initLogFirewalls();
-      await exec.timer();
-      this.forFrpsLogs();
-      this.isFirewallReload()
-      this.print();
-    };
-    start()
-    setInterval(() => start(), this.watchTime);
-  }
+  });
+};
+
+
+const isReadFile = () => {
+  return new Promise((resolve, reject) => {
+    try {
+      const child = exec(`cat /proc/uptime`);
+      child.stdout.on('data', data => {
+        const time = data?.split(/\s{1,}/g)[0] * 1000
+        const flag = time - logRule.config.watchTime > 0 ? true : false;
+        resolve(flag)
+      });
+      // child.stdout.on('close', data => resolve(true));
+      child.stderr.on('data', data => data && resolve(true));
+    } catch (e) {
+      console.log('查询开机时间失败');
+      resolve(true);
+    }
+  });
 }
 
-new app()
+const queryLoginInfo = () => {
+  return new Promise((resolve, reject) => {
+    try {
+      const child = exec(`grep  "login" ${(logRule.config.line, logRule.config.frpsLog)}`);
+      child.stdout.on('data', data => resolve(data));
+      child.stdout.on('close', data => resolve(false));
+      child.stderr.on('data', data => data && resolve(false));
+    } catch (e) {
+      console.log('grep 查询登录信息命令失败');
+      resolve(false);
+    }
+  });
+};
+
+const drop = async (ip, name = '', siteTemp = '', firewalls) => {
+  const fn = () => {
+    if (firewalls?.includes(ip)) return console.log('drop 的 ip 已存在');
+    const command =
+      logRule.config.dropTime == 0
+        ? `firewall-cmd --permanent --add-rich-rule='rule family=ipv4 source address="${ip}" drop'`
+        : `firewall-cmd --add-rich-rule='rule family=ipv4 source address="${ip}"  drop' --timeout=${logRule.config.dropTime ?? 86400
+        }`;
+    ip
+      ? exec(command, (err, stdout, stderr) => {
+        stdout &&
+          console.log(`drop 防火墙:${strReplace(stdout)} ${name} ${ip} ${siteTemp} ${logRule.config.dropTime}`);
+        stderr && console.log(strReplace(stderr));
+        err && console.log('drop 错误');
+      })
+      : console.log('drop 的 ip 错误');
+  };
+  firewalls == undefined && (firewalls = await queryFirewallAllList());
+  fn();
+};
+
+const accept = async (ip, name = '', siteTemp = '', firewalls) => {
+  const fn = () => {
+    logRule.config.ip.includes(ip)
+      ? console.log(`ip 已经存在白名单配置中 ${ip}`)
+      : (() => {
+        logRule.config.ip?.push(ip);
+        rf.writeFile(__dirname + '/config.json', JSON.stringify(logRule.config), err => {
+          err == null ? console.log(`配置白名单 Ip 成功 ${ip}`) : console.log('writeFile 写入配置失败');
+        });
+      })();
+    ip && firewalls.includes(ip)
+      ? exec(
+        `firewall-cmd --permanent --remove-rich-rule='rule family="ipv4" source address=${ip} drop'`,
+        (err, stdout, stderr) => {
+          stdout && console.log(`accept 防火墙:${strReplace(stdout)} ${name} ${ip} ${siteTemp}`);
+          stderr && console.log(strReplace(stderr));
+          err && console.log('accept 错误');
+        }
+      )
+      : console.log('accept 的 ip 错误 或者 不存在');
+  };
+  firewalls == undefined && (firewalls = await queryFirewallAllList());
+  fn();
+};
+
+const resetFrps = () => {
+  return new Promise((resolve, reject) => {
+    global.resetFrpsTime = new Date().getTime();
+    exec(`systemctl restart frps`, (err, stdout, stderr) => {
+      //frps 服务名必须是 frps
+      resolve(`frps 已重启,请查看 日志是否生成 ${new Date().Format('yyyy-MM-dd hh:mm:ss.S')}`);
+      err && console.log(`frps 重启失败${new Date().Format('yyyy-MM-dd hh:mm:ss.S')}`);
+    });
+  });
+};
+
+const reload = () => {
+  const time = global.dropIps?.length ?? 10 * 100;
+  setTimeout(() => {
+    exec(`firewall-cmd --reload`, (err, stdout, stderr) => {
+      global.dropIps = [];
+      stdout && console.log(`防火墙 reload 成功:${strReplace(stdout)} ${new Date().Format('yyyy-MM-dd hh:mm:ss.S')}`);
+      stderr && console.log(strReplace(stderr));
+      err && console.log('firewallReload 错误');
+    });
+  }, time + 3000);
+};
+
+const timer = () =>
+  new Promise((resolve, reject) => {
+    const t = setTimeout(() => {
+      resolve(t);
+      t && clearTimeout(t);
+    }, 1000);
+  });
+
+const firewallReload = (flag = false) => (flag ? reload() : global.dropIps.length !== 0 && reload());
+
+module.exports.tail = tail;
+module.exports.drop = drop;
+module.exports.timer = timer;
+module.exports.accept = accept;
+module.exports.isReadFile = isReadFile;
+module.exports.resetFrps = resetFrps;
+module.exports.queryLoginInfo = queryLoginInfo;
+module.exports.queryFirewallAllList = queryFirewallAllList;
+module.exports.firewallReload = firewallReload;
