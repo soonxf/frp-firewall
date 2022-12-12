@@ -70,7 +70,7 @@ class app {
     isSkip = (ip, site) => {
         return (this.firewalls?.indexOf(ip) != -1 ||
             this.ip.indexOf(ip) != -1 ||
-            logRule.IpInSegment(ip) ||
+            logRule.ipInSegment(ip) ||
             logRule.config.cityNo?.includes(site.cityNo) ||
             site?.country == '保留' ||
             site == null) ? true : false

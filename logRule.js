@@ -68,10 +68,10 @@ const getFrpsLogs = async (isReadFile) => {
   }
 };
 
-const IpInSegment = (ip) => {
+const ipInSegment = (ip) => {
   const iParse = ip.split(".").map(item => parseInt(item))
   const ipIn = config.ip.some(item => {
-    return /(\d{1,3}\.){3}\d{1,3}(\-|\/{1,4})/g.test(item) && item.split(".").every((item, index) => {
+    return /\-|\//g.test(item) && item.split(".").every((item, index) => {
       const ipSegment = item.split(/\-|\//).map(item => parseInt(item))
       const ipIn = ipSegment.length == 1 ? ipSegment[0] == iParse[index] : (ipSegment[0] <= iParse[index] && iParse[index] <= ipSegment[1])
       return ipIn
@@ -79,8 +79,6 @@ const IpInSegment = (ip) => {
   })
   return ipIn
 }
-
-
 //对Date的扩展，将 Date 转化为指定格式的String
 //月(M)、日(d)、小时(h)、分(m)、秒(s)、季度(q) 可以用 1-2 个占位符，
 //年(y)可以用 1-4 个占位符，毫秒(S)只能用 1 个占位符(是 1-3 位的数字)
@@ -106,5 +104,5 @@ Date.prototype.Format = function (fmt) {
 
 module.exports.getFrpsLogs = getFrpsLogs;
 module.exports.getFirewallRule = getFirewallRule;
-module.exports.IpInSegment = IpInSegment;
+module.exports.ipInSegment = ipInSegment;
 module.exports.config = config;
